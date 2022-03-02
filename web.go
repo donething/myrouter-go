@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	. "myrouter/configs"
+	"myrouter/entities"
 	"myrouter/vn007plus"
 	"net/http"
 	"time"
@@ -21,14 +22,14 @@ func Index(c *gin.Context) {
 func Reboot(c *gin.Context) {
 	err := admin.Reboot()
 	if err != nil {
-		c.JSON(http.StatusOK, JResult{
+		c.JSON(http.StatusOK, entities.JResult{
 			Code: 3000,
 			Msg:  fmt.Sprintf("重启路由器失败：%s", err),
 			Data: nil,
 		})
 	}
 
-	c.JSON(http.StatusOK, JResult{
+	c.JSON(http.StatusOK, entities.JResult{
 		Code: 0,
 		Msg:  "正在重启路由器",
 		Data: nil,
@@ -45,7 +46,7 @@ func UseLogin() gin.HandlerFunc {
 
 		// 登录失败
 		if err := admin.Login(); err != nil {
-			c.AbortWithStatusJSON(http.StatusOK, JResult{
+			c.AbortWithStatusJSON(http.StatusOK, entities.JResult{
 				Code: 2000,
 				Msg:  fmt.Sprintf("登录路由器失败：%s", err),
 				Data: nil,

@@ -1,4 +1,4 @@
-package main
+package entities
 
 // JResult 响应内容
 type JResult struct {
