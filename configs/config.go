@@ -11,7 +11,7 @@ import (
 // 配置
 type config struct {
 	// 路由器 IP 地址，如"192.168.0.1"
-	IP string `json:"IP"`
+	IP string `json:"ip"`
 
 	// 管理员账号
 	Admin struct {
@@ -24,7 +24,13 @@ type config struct {
 		Appid   string `json:"appid"`   // 组织 ID
 		Secret  string `json:"secret"`  // 秘钥
 		Agentid int    `json:"agentid"` // 应用（频道） ID
-	}
+	} `json:"wx_push"`
+
+	// 网络唤醒
+	WOL struct {
+		// 需要网络唤醒的 Mac 地址，如"89:0A:CD:EF:00:12"、"89:0a:cd:ef:00:12"或"01-23-45-56-67-89"
+		MACAddr string `json:"mac_addr"`
+	} `json:"wol"`
 }
 
 const (

@@ -30,6 +30,8 @@ func main() {
 	router.GET("/", Index)
 	router.POST("/api/reboot", Reboot)
 
+	router.POST("/api/wol", WakeupPC)
+
 	fmt.Printf("开始服务 :%s\n", port)
 	err := http.ListenAndServe(":"+port, router)
 
