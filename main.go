@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"myrouter/funcs/update_ip"
 	"net/http"
 	"os"
 	"os/exec"
@@ -19,6 +20,8 @@ const (
 
 func init() {
 	whenInterrupt()
+
+	update_ip.Update()
 }
 
 func main() {

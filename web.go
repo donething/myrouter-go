@@ -6,7 +6,7 @@ import (
 	. "myrouter/configs"
 	"myrouter/entities"
 	"myrouter/funcs/wol"
-	"myrouter/vn007plus"
+	"myrouter/models/vn007plus"
 	"net/http"
 	"time"
 )

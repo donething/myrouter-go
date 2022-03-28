@@ -31,6 +31,11 @@ type config struct {
 		// 需要网络唤醒的 Mac 地址，如"89:0A:CD:EF:00:12"、"89:0a:cd:ef:00:12"或"01-23-45-56-67-89"
 		MACAddr string `json:"mac_addr"`
 	} `json:"wol"`
+
+	// 远程服务器的域名（用于向其发送 IP 地址信息），如 "https://example.com"
+	Remote struct {
+		UpdateIPURL string `json:"update_ip_url"`
+	} `json:"remote"`
 }
 
 const (

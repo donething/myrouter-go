@@ -3,7 +3,7 @@ module myrouter
 go 1.17
 
 require (
-	github.com/donething/utils-go v0.0.17
+	github.com/donething/utils-go v0.0.20
 	github.com/gin-gonic/gin v1.7.7
 )
 

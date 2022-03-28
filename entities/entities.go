@@ -6,3 +6,9 @@ type JResult struct {
 	Msg  string      `json:"msg"`
 	Data interface{} `json:"data,omitempty"`
 }
+
+// IPAddrs IP 地址信息
+type IPAddrs struct {
+	IPv4 string
+	IPv6 string
+}
