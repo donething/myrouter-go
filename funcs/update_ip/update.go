@@ -1,16 +1,13 @@
 package update_ip
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/donething/utils-go/dohttp"
-	"io/ioutil"
 	"myrouter/configs"
 	"myrouter/entities"
 	"myrouter/push"
 	"net"
-	"net/http"
 	"strings"
 	"time"
 )
@@ -23,9 +20,10 @@ var myIPAddrs *entities.IPAddrs
 // **重启服务**将触发立即更新 IP 地址到远程服务端
 func Update() {
 	if configs.Conf.Remote.UpdateIPURL == "" {
-		fmt.Printf("服务端域名没有配置，无需即时更新 IP 地址\n")
+		fmt.Printf("服务端更新 IP 的地址没有配置，无需即时更新 IP 地址\n")
 		return
 	}
+	fmt.Printf("服务端更新 IP 的地址：'%s'\n", configs.Conf.Remote.UpdateIPURL)
 
 	ticker := time.NewTicker(10 * time.Second)
 	go func() {
@@ -52,25 +50,11 @@ func up() error {
 		myIPAddrs = ip
 		fmt.Printf("IP 地址已改变，向远程发送新的地址\n")
 		// 发送更新请求
-		ipBS, err := json.Marshal(ip)
+		var client = dohttp.New(30*time.Second, false, false)
+		bs, err := client.PostJSONObj(configs.Conf.Remote.UpdateIPURL, *myIPAddrs, nil)
 		if err != nil {
 			return err
 		}
-		req, err := http.NewRequest("POST", configs.Conf.Remote.UpdateIPURL, bytes.NewReader(ipBS))
-		if err != nil {
-			return err
-		}
-		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			return err
-		}
-
-		// 解析响应
-		bs, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return err
-		}
-		res.Body.Close()
 
 		// 分析结果
 		var result entities.JResult
@@ -83,6 +67,7 @@ func up() error {
 		}
 
 		fmt.Printf("远程服务器已更新 IP 地址信息\n")
+		return nil
 	}
 
 	fmt.Printf("IP 地址信息没有变化，无需发送到远程\n")
