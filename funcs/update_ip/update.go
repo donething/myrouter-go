@@ -27,7 +27,7 @@ func Update() {
 		return
 	}
 
-	ticker := time.NewTicker(60 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 	go func() {
 		for range ticker.C {
 			err := up()
@@ -67,10 +67,10 @@ func up() error {
 
 		// 解析响应
 		bs, err := ioutil.ReadAll(res.Body)
-		res.Body.Close()
 		if err != nil {
 			return err
 		}
+		res.Body.Close()
 
 		// 分析结果
 		var result entities.JResult
