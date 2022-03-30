@@ -25,6 +25,14 @@ func Update() {
 	}
 	fmt.Printf("服务端更新 IP 的地址：'%s'\n", configs.Conf.Remote.UpdateIPURL)
 
+	// 执行程序后先更新一次 IP 地址
+	err := up()
+	if err != nil {
+		fmt.Printf("更新 IP 地址时出错：%s\n", err)
+		push.WXPushCard("更新 IP 地址时出错", err.Error(), "", "")
+		return
+	}
+
 	ticker := time.NewTicker(60 * time.Second)
 	go func() {
 		for range ticker.C {
