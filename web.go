@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha256"
 	"embed"
 	"fmt"
 	"html/template"
@@ -12,11 +13,6 @@ import (
 	"strings"
 )
 
-// IndexData 传递到首页模板的数据
-type IndexData struct {
-	IPv6 string
-}
-
 //go:embed "templates/*.html"
 var templatesFS embed.FS
 
@@ -27,19 +23,32 @@ var admin = vn007plus.Get(Conf.Admin.Username, Conf.Admin.Passwd)
 // 中间件 https://www.alexedwards.net/blog/making-and-using-middleware
 func UseAuth(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// 放行首页
-		if r.URL.Path == "/" {
+		// 放行图标等资源文件
+		if r.URL.Path == "/favicon.ico" {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		// 其它需要操作验证码
-		auth := r.Header.Get("Authorization")
-		if auth == "" || auth != Conf.Auth {
-			fmt.Printf("错误的操作验证码：%s\n", auth)
+		// 提取验证参数
+		t := r.URL.Query().Get("t")
+		s := r.URL.Query().Get("s")
+
+		// 缺少验证参数，直接不通过验证，抛弃此次请求
+		if strings.TrimSpace(t) == "" || strings.TrimSpace(s) == "" {
+			fmt.Printf("Auth 验证信息为空，直接不通过\n")
 			return
 		}
 
+		// 根据时间戳 t(毫秒)，计算 sha266。计算目标为 (操作验证码 + t + 操作验证码)
+		sum := sha256.Sum256([]byte(Conf.Auth + t + Conf.Auth))
+		sumStr := fmt.Sprintf("%x", sum)
+		// 验证不通过，抛弃此次请求
+		if strings.ToLower(sumStr) != strings.ToLower(s) {
+			fmt.Printf("Auth 验证不通过：t: '%s'\n", t)
+			return
+		}
+
+		// 验证通过，继续下一步
 		fmt.Printf("已验证操作码，继续下一步\n")
 		next.ServeHTTP(w, r)
 	}
