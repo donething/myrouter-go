@@ -25,7 +25,7 @@ func Update() {
 	}
 	fmt.Printf("服务端更新 IP 的地址：'%s'\n", configs.Conf.Remote.UpdateIPURL)
 
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(60 * time.Second)
 	go func() {
 		for range ticker.C {
 			err := up()

@@ -13,21 +13,20 @@ import (
 	"syscall"
 )
 
-const (
-	// 服务的端口
-	port = "9090"
-)
-
 func init() {
 	whenInterrupt()
 
 	update_ip.Update()
 }
 
+// 后台服务
+// 使用 "0.0.0.0"可以同时监听 IPv4、IPv6
+const addr = "0.0.0.0:20220"
+
 func main() {
-	fmt.Printf("开始服务 :%s\n", port)
+	fmt.Printf("开始服务：%s\n", addr)
 	server := http.Server{
-		Addr: "127.0.0.1:20220",
+		Addr: addr,
 	}
 
 	http.Handle("/", UseAuth(UseLogin(http.HandlerFunc(Index))))

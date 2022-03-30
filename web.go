@@ -1,11 +1,11 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"html/template"
 	"myrouter/comm"
 	. "myrouter/configs"
-	"myrouter/funcs/update_ip"
 	"myrouter/funcs/wol"
 	"myrouter/models/vn007plus"
 	"net/http"
@@ -16,6 +16,9 @@ import (
 type IndexData struct {
 	IPv6 string
 }
+
+//go:embed "templates/*.html"
+var templatesFS embed.FS
 
 // 登录路由器使用的账号
 var admin = vn007plus.Get(Conf.Admin.Username, Conf.Admin.Passwd)
@@ -70,11 +73,9 @@ func UseLogin(next http.Handler) http.HandlerFunc {
 
 // Index 首页
 func Index(w http.ResponseWriter, _ *http.Request) {
-	IPAddrs, err := update_ip.GetLocalIPAddr()
+	tpl, err := template.ParseFS(templatesFS, "templates/index.html")
 	comm.Panic(err)
-	tpl, err := template.ParseFiles("templates/index.html")
-	comm.Panic(err)
-	err = tpl.Execute(w, IndexData{IPv6: IPAddrs.IPv6})
+	err = tpl.Execute(w, "Hello.")
 	comm.Panic(err)
 }
 
