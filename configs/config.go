@@ -10,6 +10,9 @@ import (
 
 // 配置
 type config struct {
+	// 操作验证码
+	Auth string `json:"auth"`
+
 	// 路由器 IP 地址，如"192.168.0.1"
 	IP string `json:"ip"`
 

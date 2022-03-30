@@ -2,98 +2,107 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"html/template"
+	"myrouter/comm"
 	. "myrouter/configs"
-	"myrouter/entities"
+	"myrouter/funcs/update_ip"
 	"myrouter/funcs/wol"
 	"myrouter/models/vn007plus"
 	"net/http"
-	"time"
+	"strings"
 )
 
-// 登录路由器的账号
+// IndexData 传递到首页模板的数据
+type IndexData struct {
+	IPv6 string
+}
+
+// 登录路由器使用的账号
 var admin = vn007plus.Get(Conf.Admin.Username, Conf.Admin.Passwd)
 
-// UseLogin 登录路由器
-func UseLogin() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// 访问首页直接通过
-		if c.FullPath() == "/" {
-			c.Next()
-		}
-
-		// 登录失败
-		if err := admin.Login(); err != nil {
-			c.AbortWithStatusJSON(http.StatusOK, entities.JResult{
-				Code: 2000,
-				Msg:  fmt.Sprintf("登录路由器失败：%s", err),
-				Data: nil,
-			})
+// UseAuth 验证请求的中间件
+// 中间件 https://www.alexedwards.net/blog/making-and-using-middleware
+func UseAuth(next http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// 放行首页
+		if r.URL.Path == "/" {
+			next.ServeHTTP(w, r)
 			return
 		}
 
-		// 登录成功，下一步
-		c.Next()
+		// 其它需要操作验证码
+		auth := r.Header.Get("Authorization")
+		if auth == "" || auth != Conf.Auth {
+			fmt.Printf("错误的操作验证码：%s\n", auth)
+			return
+		}
+
+		fmt.Printf("已验证操作码，继续下一步\n")
+		next.ServeHTTP(w, r)
+	}
+}
+
+// UseLogin 登录路由器的中间件
+// 仅对 /api/ 中需要发送Auth的功能，才先模拟登录路由器
+func UseLogin(next http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// 不是 /api/ 的请求，直接下一步
+		if strings.Index(r.URL.Path, "/api/") != 0 {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// 登录路由器
+		err := admin.Login()
+
+		// 登录失败，无法继续下一步
+		if err != nil {
+			_, errW := w.Write([]byte(fmt.Sprintf("登录路由器失败：%s", err)))
+			comm.Panic(errW)
+			return
+		}
+
+		// 登录成功，继续下一步
+		fmt.Printf("已登录路由器\n")
+		next.ServeHTTP(w, r)
 	}
 }
 
 // Index 首页
-func Index(c *gin.Context) {
-	c.String(http.StatusOK, "Hello, World! %s", time.Now().String())
+func Index(w http.ResponseWriter, _ *http.Request) {
+	IPAddrs, err := update_ip.GetLocalIPAddr()
+	comm.Panic(err)
+	tpl, err := template.ParseFiles("templates/index.html")
+	comm.Panic(err)
+	err = tpl.Execute(w, IndexData{IPv6: IPAddrs.IPv6})
+	comm.Panic(err)
 }
 
-// Status 是否可连接到路由器
-func Status(c *gin.Context) {
-	c.JSON(http.StatusOK, entities.JResult{
-		Code: 0,
-		Msg:  "可连接到路由器",
-		Data: nil,
-	})
-}
-
-// Reboot 重启
-func Reboot(c *gin.Context) {
+// Reboot 重启路由器
+func Reboot(w http.ResponseWriter, _ *http.Request) {
+	msg := "正在重启路由器…"
 	err := admin.Reboot()
 	if err != nil {
-		c.JSON(http.StatusOK, entities.JResult{
-			Code: 3000,
-			Msg:  fmt.Sprintf("重启路由器失败：%s", err),
-			Data: nil,
-		})
-		return
+		msg = fmt.Sprintf("重启路由器出错：%s", err)
 	}
 
-	c.JSON(http.StatusOK, entities.JResult{
-		Code: 0,
-		Msg:  "正在重启路由器",
-		Data: nil,
-	})
+	_, err = w.Write([]byte(msg))
+	comm.Panic(err)
 }
 
 // WakeupPC 唤醒网络设备
-func WakeupPC(c *gin.Context) {
+func WakeupPC(w http.ResponseWriter, _ *http.Request) {
 	if Conf.WOL.MACAddr == "" {
-		c.JSON(http.StatusOK, entities.JResult{
-			Code: 3100,
-			Msg:  "网络唤醒失败：目标 MAC 地址为空",
-			Data: nil,
-		})
+		_, err := w.Write([]byte("无法网络唤醒电脑：目标 MAC 地址为空"))
+		comm.Panic(err)
 		return
 	}
 
+	msg := "正在网络唤醒电脑…"
 	err := wol.Wakeup(Conf.WOL.MACAddr)
 	if err != nil {
-		c.JSON(http.StatusOK, entities.JResult{
-			Code: 3110,
-			Msg:  fmt.Sprintf("唤醒网络设备出错：%s", err),
-			Data: nil,
-		})
-		return
+		msg = fmt.Sprintf("无法网络唤醒电脑：%s", err)
 	}
-
-	c.JSON(http.StatusOK, entities.JResult{
-		Code: 0,
-		Msg:  "成功唤醒目标网络设备",
-		Data: nil,
-	})
+	_, err = w.Write([]byte(msg))
+	comm.Panic(err)
 }

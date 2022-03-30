@@ -40,7 +40,7 @@ func Update() {
 
 // 更新 IP 地址
 func up() error {
-	ip, err := getLocalIPAddr()
+	ip, err := GetLocalIPAddr()
 	if err != nil {
 		return err
 	}
@@ -74,10 +74,10 @@ func up() error {
 	return nil
 }
 
-// 获取本地的 IP 地址
+// GetLocalIPAddr 获取本地的 IP 地址
 //
 // @see https://www.cnblogs.com/hirampeng/p/11478995.html
-func getLocalIPAddr() (*entities.IPAddrs, error) {
+func GetLocalIPAddr() (*entities.IPAddrs, error) {
 	var ipAddrs = new(entities.IPAddrs)
 
 	// 获取所有网卡

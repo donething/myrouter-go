@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"myrouter/comm"
 	"myrouter/funcs/update_ip"
 	"net/http"
 	"os"
@@ -25,27 +25,16 @@ func init() {
 }
 
 func main() {
-	gin.SetMode(gin.ReleaseMode)
-	router := gin.Default()
-
-	router.Use(UseLogin())
-
-	router.GET("/", Index)
-	router.GET("/api/status", Status)
-
-	// 控制路由器
-	router.POST("/api/reboot", Reboot)
-
-	// 控制周边
-	router.POST("/api/wol", WakeupPC)
-
 	fmt.Printf("开始服务 :%s\n", port)
-	err := http.ListenAndServe(":"+port, router)
-
-	if err != nil {
-		fmt.Printf("开启服务出错：%s\n", err)
-		os.Exit(1)
+	server := http.Server{
+		Addr: "127.0.0.1:20220",
 	}
+
+	http.Handle("/", UseAuth(UseLogin(http.HandlerFunc(Index))))
+	http.Handle("/api/reboot", UseAuth(UseLogin(http.HandlerFunc(Reboot))))
+	http.Handle("/api/wol", UseAuth(UseLogin(http.HandlerFunc(WakeupPC))))
+
+	comm.Panic(server.ListenAndServe())
 }
 
 // 中断处理程序

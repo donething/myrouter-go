@@ -131,7 +131,7 @@ func (a *account) Reboot() error {
 
 	// 重启失败
 	if rebootResp.Message == "NO_AUTH" {
-		return fmt.Errorf("重启路由器失败：'%s' ==> SessionID: '%s'\n", string(bs), a.sessionId)
+		return fmt.Errorf("验证码有误 'NO_AUTH'")
 	}
 
 	// 重启成功

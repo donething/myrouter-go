@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>我的路由器</title>
+</head>
+<body style="background: #FAF9F8">
+<div style="display: flex;flex-flow: column nowrap;gap: 10px;background: #FFF">
+    <label for="auth">功能</label>
+    <div style="display: flex;flex-flow: row wrap;gap: 10px">
+        <button onclick="onReboot()">重启路由器</button>
+        <button onclick="onWakeup()">网络唤醒电脑</button>
+    </div>
+
+    <label for="auth" style="margin-top: 30px">操作验证码</label>
+    <div>
+        <input id="auth" type="password" placeholder="操作验证码"/>
+        <button onclick="onSaveAuth()">保存</button>
+    </div>
+</div>
+
+<script>
+    // 保存到 localstorage 中的操作验证码的键
+    const LS_AUTH = "auth"
+
+    // 初始化
+    const init = () => {
+        // 填充操作验证码的输入框
+        document.querySelector("#auth").value = localStorage.getItem(LS_AUTH) || ""
+    }
+    init()
+
+    // 执行请求
+    const request = async (path) => {
+        let resp = await fetch(path, {headers: {"Authorization": localStorage.getItem(LS_AUTH)}})
+        let msg = await resp.text()
+        alert(msg)
+    }
+
+    // 重启
+    const onReboot = () => {
+        if (confirm("确认 重启路由器？")) {
+            request('/api/reboot')
+        }
+    }
+
+    // 唤醒网络设备
+    const onWakeup = () => {
+        request('/api/wol')
+    }
+
+    // 保存操作验证码
+    const onSaveAuth = () => {
+        localStorage.setItem(LS_AUTH, document.querySelector("#auth").value)
+    }
+</script>
+</body>
+</html>
