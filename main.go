@@ -31,8 +31,12 @@ func main() {
 	router.Use(UseLogin())
 
 	router.GET("/", Index)
+	router.GET("/api/status", Status)
+
+	// 控制路由器
 	router.POST("/api/reboot", Reboot)
 
+	// 控制周边
 	router.POST("/api/wol", WakeupPC)
 
 	fmt.Printf("开始服务 :%s\n", port)

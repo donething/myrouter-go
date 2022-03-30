@@ -42,6 +42,15 @@ func Index(c *gin.Context) {
 	c.String(http.StatusOK, "Hello, World! %s", time.Now().String())
 }
 
+// Status 是否可连接到路由器
+func Status(c *gin.Context) {
+	c.JSON(http.StatusOK, entities.JResult{
+		Code: 0,
+		Msg:  "可连接到路由器",
+		Data: nil,
+	})
+}
+
 // Reboot 重启
 func Reboot(c *gin.Context) {
 	err := admin.Reboot()
