@@ -2,22 +2,20 @@ package main
 
 import (
 	"crypto/sha256"
-	"embed"
 	"fmt"
+	"github.com/donething/utils-go/dohttp"
 	"html/template"
 	"math"
 	"myrouter/comm"
 	. "myrouter/configs"
 	"myrouter/funcs/wol"
 	"myrouter/models/vn007plus"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 )
-
-//go:embed "templates/*.html"
-var templatesFS embed.FS
 
 // 登录路由器使用的账号
 var admin = vn007plus.Get(Conf.Admin.Username, Conf.Admin.Passwd)
@@ -26,8 +24,14 @@ var admin = vn007plus.Get(Conf.Admin.Username, Conf.Admin.Passwd)
 // 中间件 https://www.alexedwards.net/blog/making-and-using-middleware
 func UseAuth(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// 放行内网访问
+		if !dohttp.IsPublicIP(net.ParseIP(r.RemoteAddr)) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		// 放行图标等资源文件
-		if r.URL.Path == "/favicon.ico" {
+		if r.URL.Path == "/favicon.ico" || r.URL.Path == "/static/" {
 			next.ServeHTTP(w, r)
 			return
 		}
