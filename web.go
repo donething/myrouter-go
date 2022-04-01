@@ -3,14 +3,12 @@ package main
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/donething/utils-go/dohttp"
 	"html/template"
 	"math"
 	"myrouter/comm"
 	. "myrouter/configs"
 	"myrouter/funcs/wol"
 	"myrouter/models/vn007plus"
-	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -25,7 +23,7 @@ var admin = vn007plus.Get(Conf.Admin.Username, Conf.Admin.Passwd)
 func UseAuth(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// 放行内网访问
-		if !dohttp.IsPublicIP(net.ParseIP(r.RemoteAddr)) {
+		if strings.Index(r.RemoteAddr, "127.0.0.1:") == 0 {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -42,18 +40,18 @@ func UseAuth(next http.Handler) http.HandlerFunc {
 
 		// 缺少验证参数，直接不通过验证，抛弃此次请求
 		if strings.TrimSpace(t) == "" || strings.TrimSpace(s) == "" {
-			fmt.Printf("操作验证不通过：验证信息为空\n")
+			abortAuth(w, r, "验证信息为空")
 			return
 		}
 
 		// 验证时间戳，如果和系统时间误差多于 10*1000毫秒(10秒)，即验证不通过
 		reqUnixMilli, err := strconv.ParseInt(t, 10, 64)
 		if err != nil {
-			fmt.Printf("操作验证不通过：时间戳无法转换为数字\n")
+			abortAuth(w, r, "时间戳无法转换为数字")
 			return
 		}
 		if math.Abs(float64(time.Now().UnixMilli()-reqUnixMilli)) > 10*1000 {
-			fmt.Printf("操作验证不通过：时间戳已过期\n")
+			abortAuth(w, r, "时间戳已过期")
 			return
 		}
 
@@ -62,7 +60,7 @@ func UseAuth(next http.Handler) http.HandlerFunc {
 		sumStr := fmt.Sprintf("%x", sum)
 		// 验证不通过，抛弃此次请求
 		if strings.ToLower(sumStr) != strings.ToLower(s) {
-			fmt.Printf("操作验证不通过：验证失败\n")
+			abortAuth(w, r, "验证失败")
 			return
 		}
 
@@ -132,5 +130,12 @@ func WakeupPC(w http.ResponseWriter, _ *http.Request) {
 		msg = fmt.Sprintf("无法网络唤醒电脑：%s", err)
 	}
 	_, err = w.Write([]byte(msg))
+	comm.Panic(err)
+}
+
+// 抛弃请求
+func abortAuth(w http.ResponseWriter, r *http.Request, msg string) {
+	fmt.Printf("操作验证不通过 '%s'：%s\n", r.URL.Path, msg)
+	_, err := w.Write([]byte(msg))
 	comm.Panic(err)
 }
