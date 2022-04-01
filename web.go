@@ -5,12 +5,15 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
+	"math"
 	"myrouter/comm"
 	. "myrouter/configs"
 	"myrouter/funcs/wol"
 	"myrouter/models/vn007plus"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 )
 
 //go:embed "templates/*.html"
@@ -35,7 +38,18 @@ func UseAuth(next http.Handler) http.HandlerFunc {
 
 		// 缺少验证参数，直接不通过验证，抛弃此次请求
 		if strings.TrimSpace(t) == "" || strings.TrimSpace(s) == "" {
-			fmt.Printf("Auth 验证信息为空，直接不通过\n")
+			fmt.Printf("操作验证不通过：验证信息为空\n")
+			return
+		}
+
+		// 验证时间戳，如果和系统时间误差多于 10*1000毫秒(10秒)，即验证不通过
+		reqUnixMilli, err := strconv.ParseInt(t, 10, 64)
+		if err != nil {
+			fmt.Printf("操作验证不通过：时间戳无法转换为数字\n")
+			return
+		}
+		if math.Abs(float64(time.Now().UnixMilli()-reqUnixMilli)) > 10*1000 {
+			fmt.Printf("操作验证不通过：时间戳已过期\n")
 			return
 		}
 
@@ -44,7 +58,7 @@ func UseAuth(next http.Handler) http.HandlerFunc {
 		sumStr := fmt.Sprintf("%x", sum)
 		// 验证不通过，抛弃此次请求
 		if strings.ToLower(sumStr) != strings.ToLower(s) {
-			fmt.Printf("Auth 验证不通过：t: '%s'\n", t)
+			fmt.Printf("操作验证不通过：验证失败\n")
 			return
 		}
 
