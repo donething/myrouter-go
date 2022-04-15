@@ -21,6 +21,7 @@ var myIPAddrs *entities.IPAddrs
 func Update() {
 	if configs.Conf.Remote.UpdateIPURL == "" {
 		fmt.Printf("服务端更新 IP 的地址没有配置，无需即时更新 IP 地址\n")
+		push.WXPushCard("服务端更新 IP 的地址没有配置", "无需即时更新 IP 地址", "", "")
 		return
 	}
 	fmt.Printf("服务端更新 IP 的地址：'%s'\n", configs.Conf.Remote.UpdateIPURL)
