@@ -1,16 +1,12 @@
 package main
 
 import (
-	"crypto/sha256"
 	"fmt"
-	"html/template"
-	"math"
 	"myrouter/comm"
 	. "myrouter/configs"
 	"myrouter/funcs/wol"
 	"myrouter/models/vn007plus"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -22,45 +18,22 @@ var admin = vn007plus.Get(Conf.Admin.Username, Conf.Admin.Passwd)
 // 中间件 https://www.alexedwards.net/blog/making-and-using-middleware
 func UseAuth(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// 放行内网访问
-		if strings.Index(r.RemoteAddr, "127.0.0.1:") == 0 {
+		// 不限制跨域
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers",
+			"Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+		// 仅对 /api/ 路径进行操作验证，其它访问直接放行下一步
+		if strings.Index(r.URL.Path, "/api/") != 0 {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		// 放行图标等资源文件
-		if r.URL.Path == "/favicon.ico" || r.URL.Path == "/static/" {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// 提取验证参数
-		t := r.URL.Query().Get("t")
-		s := r.URL.Query().Get("s")
-
-		// 缺少验证参数，直接不通过验证，抛弃此次请求
-		if strings.TrimSpace(t) == "" || strings.TrimSpace(s) == "" {
-			abortAuth(w, r, "验证信息为空")
-			return
-		}
-
-		// 验证时间戳，如果和系统时间误差多于 10*1000毫秒(10秒)，即验证不通过
-		reqUnixMilli, err := strconv.ParseInt(t, 10, 64)
-		if err != nil {
-			abortAuth(w, r, "时间戳无法转换为数字")
-			return
-		}
-		if math.Abs(float64(time.Now().UnixMilli()-reqUnixMilli)) > 10*1000 {
-			abortAuth(w, r, "时间戳已过期")
-			return
-		}
-
-		// 根据时间戳 t(毫秒)，计算 sha266。计算目标为 (操作验证码 + t + 操作验证码)
-		sum := sha256.Sum256([]byte(Conf.Auth + t + Conf.Auth))
-		sumStr := fmt.Sprintf("%x", sum)
-		// 验证不通过，抛弃此次请求
-		if strings.ToLower(sumStr) != strings.ToLower(s) {
-			abortAuth(w, r, "验证失败")
+		// 缺少验证参数、不正确，则抛弃此次请求
+		auth := r.Header.Get("Authorization")
+		if auth == "" || auth != Conf.Auth {
+			abortAuth(w, r, "操作验证码有误，不通过验证")
 			return
 		}
 
@@ -98,9 +71,7 @@ func UseLogin(next http.Handler) http.HandlerFunc {
 
 // Index 首页
 func Index(w http.ResponseWriter, _ *http.Request) {
-	tpl, err := template.ParseFS(templatesFS, "templates/index.html")
-	comm.Panic(err)
-	err = tpl.Execute(w, "Hello.")
+	_, err := w.Write([]byte(fmt.Sprintf("Hello, %s", time.Now().String())))
 	comm.Panic(err)
 }
 

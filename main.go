@@ -1,7 +1,6 @@
 package main
 
 import (
-	"embed"
 	"fmt"
 	"myrouter/comm"
 	"myrouter/funcs/update_ip"
@@ -13,12 +12,6 @@ import (
 	"runtime"
 	"syscall"
 )
-
-//go:embed "templates/*.html"
-var templatesFS embed.FS
-
-//go:embed "static"
-var staticFS embed.FS
 
 func init() {
 	whenInterrupt()
@@ -36,14 +29,7 @@ func main() {
 		Addr: addr,
 	}
 
-	// http.FS can be used to create a http Filesystem
-	var sFileSystem = http.FS(staticFS)
-	sfs := http.FileServer(sFileSystem)
-	// Serve static files
-	// 注意最后的"/"不能省略，否则会返回首页
-	http.Handle("/static/", sfs)
-
-	http.Handle("/", UseAuth(UseLogin(http.HandlerFunc(Index))))
+	http.Handle("/hello", UseAuth(UseLogin(http.HandlerFunc(Index))))
 	http.Handle("/api/reboot", UseAuth(UseLogin(http.HandlerFunc(Reboot))))
 	http.Handle("/api/wol", UseAuth(UseLogin(http.HandlerFunc(WakeupPC))))
 
