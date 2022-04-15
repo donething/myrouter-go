@@ -44,13 +44,13 @@ func UseAuth(next http.Handler) http.HandlerFunc {
 			return
 		}
 
-		// 验证时间戳，如果和系统时间误差多于 10*1000毫秒(10秒)，即验证不通过
+		// 验证时间戳，如果和系统时间误差多于 30*1000毫秒(30秒)，即验证不通过
 		reqUnixMilli, err := strconv.ParseInt(t, 10, 64)
 		if err != nil {
 			abortAuth(w, r, "时间戳无法转换为数字")
 			return
 		}
-		if math.Abs(float64(time.Now().UnixMilli()-reqUnixMilli)) > 10*1000 {
+		if math.Abs(float64(time.Now().UnixMilli()-reqUnixMilli)) > 30*1000 {
 			abortAuth(w, r, "时间戳已过期")
 			return
 		}
