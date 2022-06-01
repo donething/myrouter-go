@@ -55,7 +55,7 @@ func UseAuth(next http.Handler) http.HandlerFunc {
 			return
 		}
 
-		// 根据时间戳 t(毫秒)，计算 sha266。计算目标为 (操作验证码 + t + 操作验证码)
+		// 根据时间戳 t(毫秒)，计算 sha256。计算目标为 (操作验证码 + t + 操作验证码)
 		sum := sha256.Sum256([]byte(Conf.Auth + t + Conf.Auth))
 		sumStr := fmt.Sprintf("%x", sum)
 		// 验证不通过，抛弃此次请求

@@ -63,6 +63,7 @@ func whenInterrupt() {
 }
 
 // 不知什么原因，在 vn007+ 结束程序后，占用的端口不会释放，需要 kill -9 本程序的进程才能释放端口
+// 强制结束本程序的命令：kill -9 $(pidof myrouter)
 func killServer() {
 	// 仅在 Linux 下 kill 本程序
 	if runtime.GOOS != "linux" {
