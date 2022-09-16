@@ -23,7 +23,7 @@ func Wakeup(macAddr string) error {
 		return err
 	}
 
-	// 本地地址。在路由器上允许时需要此项，否则发送 UDP 广播无效，其它平台可为 nil
+	// 本地地址。在路由器上网络唤醒电脑时需要此项，否则发送 UDP 广播无效，其它平台可为 nil
 	localAddrStr := fmt.Sprintf("%s:%s", configs.Conf.IP, port)
 	localAddr, err := net.ResolveUDPAddr("udp", localAddrStr)
 	if err != nil {
