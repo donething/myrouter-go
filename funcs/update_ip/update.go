@@ -102,7 +102,7 @@ func GetLocalIPAddr() (*entities.IPAddrs, error) {
 		ipNet, isIpNet := addr.(*net.IPNet)
 		// 是网卡并且不是本地环回网卡
 		if isIpNet && !ipNet.IP.IsLoopback() {
-			ipStr := ipNet.IP.String()
+			ipStr := strings.TrimSpace(ipNet.IP.String())
 			// ipv4
 			if len(strings.Split(ipStr, ".")) == 4 && dohttp.IsPublicIP(net.ParseIP(ipStr)) &&
 				ipAddrs.IPv4 == "" {
@@ -113,6 +113,10 @@ func GetLocalIPAddr() (*entities.IPAddrs, error) {
 				ipAddrs.IPv6 = ipStr
 			}
 		}
+	}
+
+	if ipAddrs.IPv4 == "" && ipAddrs.IPv6 == "" {
+		return nil, fmt.Errorf("获取到的 IPV4、IPV6 地址都为空")
 	}
 
 	return ipAddrs, nil
