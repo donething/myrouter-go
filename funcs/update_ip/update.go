@@ -8,6 +8,7 @@ import (
 	"myrouter/entities"
 	"myrouter/push"
 	"net"
+	"os/exec"
 	"strings"
 	"time"
 )
@@ -49,7 +50,8 @@ func Update() {
 
 // 推送 IP 地址
 func up() error {
-	ip, err := GetLocalIPAddr()
+	// ip, err := GetLocalIPAddr()
+	ip, err := GetLocalIPAddrWithCmd()
 	if err != nil {
 		return err
 	}
@@ -86,6 +88,8 @@ func up() error {
 
 // GetLocalIPAddr 获取本地的 IP 地址
 //
+// 在运营商重新分配IP地址后，将无法获取到新的IP信息，需要用 GetLocalIPAddrWithCmd()
+//
 // @see https://www.cnblogs.com/hirampeng/p/11478995.html
 func GetLocalIPAddr() (*entities.IPAddrs, error) {
 	var ipAddrs = new(entities.IPAddrs)
@@ -119,5 +123,28 @@ func GetLocalIPAddr() (*entities.IPAddrs, error) {
 		return nil, fmt.Errorf("获取到的 IPV4、IPV6 地址都为空")
 	}
 
+	return ipAddrs, nil
+}
+
+// GetLocalIPAddrWithCmd 通过 Linux 命令获取地址信息
+//
+// 由于 GetLocalIPAddr() 在运营商重新分配IP地址后，将无法获取到新的IP信息，所以用Linux命令的方式获取
+//
+// @see https://superuser.com/a/1057290
+func GetLocalIPAddrWithCmd() (*entities.IPAddrs, error) {
+	var ipAddrs = new(entities.IPAddrs)
+	outV6, errV6 := exec.Command("bash", "-c",
+		"ip -6 addr | grep inet6 | awk -F '[ \\t]+|/' '{print $3}' | grep -v ^::1 | grep -v ^fe80",
+	).Output()
+	outV4, errV4 := exec.Command("bash", "-c",
+		"ip -4 addr | grep inet | awk -F '[ \\t]+|/' '{print $3}' | grep -v ^127 | grep -v ^192",
+	).Output()
+
+	if errV6 != nil && errV4 != nil {
+		return nil, fmt.Errorf("获取 IPV6、IPV4 地址都出错：IPv6(%s)，IPv4(%s)", errV6, errV4)
+	}
+
+	ipAddrs.IPv6 = string(outV6)
+	ipAddrs.IPv4 = string(outV4)
 	return ipAddrs, nil
 }
