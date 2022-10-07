@@ -131,6 +131,8 @@ func GetLocalIPAddr() (*entities.IPAddrs, error) {
 // 由于 GetLocalIPAddr() 在运营商重新分配IP地址后，将无法获取到新的IP信息，所以用Linux命令的方式获取
 //
 // @see https://superuser.com/a/1057290
+//
+// @see https://stackoverflow.com/a/41038684/8179418
 func GetLocalIPAddrWithCmd() (*entities.IPAddrs, error) {
 	var ipAddrs = new(entities.IPAddrs)
 	outV6, errV6 := exec.Command("bash", "-c",
