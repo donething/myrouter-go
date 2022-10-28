@@ -35,7 +35,8 @@ type config struct {
 		MACAddr string `json:"mac_addr"`
 	} `json:"wol"`
 
-	// 远程服务器的域名（用于向其发送 IP 地址信息），如 "https://example.com"
+	// 远程服务器的域名（用于向其发送 IP 地址信息），如 "https://example.com/api/router/ip/update"
+	// 本地测试可设为后台地址，如"http://127.0.0.1:1234/api/router/ip/update"
 	Remote struct {
 		UpdateIPURL string `json:"update_ip_url"`
 	} `json:"remote"`
