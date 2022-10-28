@@ -50,8 +50,8 @@ func Update() {
 
 // 推送 IP 地址
 func up() error {
-	// ip, err := GetLocalIPAddr()
-	ip, err := GetLocalIPAddrWithCmd()
+	ip, err := GetLocalIPAddr()
+	// ip, err := GetLocalIPAddrWithCmd()
 	if err != nil {
 		return err
 	}
