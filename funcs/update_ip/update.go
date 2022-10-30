@@ -19,6 +19,8 @@ var myIPAddrs *entities.IPAddrs
 // Update 推送 IP 地址到远程服务端
 //
 // **重启服务**将触发立即推送 IP 地址到远程服务端
+//
+// 在获取出错后，暂停获取
 func Update() {
 	if configs.Conf.Remote.UpdateIPURL == "" {
 		fmt.Printf("服务端推送 IP 的地址没有配置，无法推送 IP 地址\n")
@@ -30,7 +32,7 @@ func Update() {
 	// 执行程序后先推送一次 IP 地址
 	err := up()
 	if err != nil {
-		fmt.Printf("推送 IP 地址时出错：%s\n", err)
+		fmt.Printf("推送 IP 地址时出错，暂停定时获取 IP 地址：%s\n", err)
 		push.WXPushCard("[路由器] 推送 IP 地址时出错", err.Error(), "", "")
 		return
 	}
@@ -40,9 +42,9 @@ func Update() {
 		for range ticker.C {
 			err := up()
 			if err != nil {
-				fmt.Printf("推送 IP 地址时出错：%s\n", err)
+				ticker.Stop()
+				fmt.Printf("推送 IP 地址时出错，暂停定时获取 IP 地址：%s\n", err)
 				push.WXPushCard("[路由器] 推送 IP 地址时出错", err.Error(), "", "")
-				continue
 			}
 		}
 	}()
@@ -56,10 +58,16 @@ func up() error {
 		return err
 	}
 
+	// 都为空
+	if ip.IPv4 == "" && ip.IPv6 == "" {
+		return fmt.Errorf("获取到的 IPv4、IPv6 都为空")
+	}
+
 	fmt.Printf("此次获取的 IP 地址：%+v\n", ip)
 	if myIPAddrs == nil || ip.IPv4 != myIPAddrs.IPv4 || ip.IPv6 != myIPAddrs.IPv6 {
 		myIPAddrs = ip
 		fmt.Printf("IP 地址已改变，向远程发送新的地址\n")
+
 		// 发送推送请求
 		var client = dohttp.New(30*time.Second, false, false)
 		bs, err := client.PostJSONObj(configs.Conf.Remote.UpdateIPURL, *myIPAddrs, nil)
