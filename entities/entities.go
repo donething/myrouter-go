@@ -9,6 +9,6 @@ type JResult struct {
 
 // IPAddrs IP 地址信息
 type IPAddrs struct {
-	IPv4 string
-	IPv6 string
+	IPv4 string `json:"ipv4"`
+	IPv6 string `json:"ipv6"`
 }
