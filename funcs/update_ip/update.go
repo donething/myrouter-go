@@ -32,7 +32,7 @@ func Update() {
 	// 执行程序后先推送一次 IP 地址
 	err := up()
 	if err != nil {
-		fmt.Printf("推送 IP 地址时出错，暂停定时获取 IP 地址：%s\n", err)
+		fmt.Printf("推送 IP 地址时出错：%s\n", err)
 		push.WXPushCard("[路由器] 推送 IP 地址时出错", err.Error(), "", "")
 		return
 	}
@@ -82,7 +82,7 @@ func up() error {
 			return fmt.Errorf("解析远程响应出错 '%s' ==> '%s'", err, string(bs))
 		}
 		if result.Code != 0 {
-			return fmt.Errorf("%s：%s", result.Msg, result.Data)
+			return fmt.Errorf("%s", result.Msg)
 		}
 
 		push.WXPushCard("[路由器] 已推送 IP 地址", "已推送路由器 IP 地址到远程服务器", "", "")
