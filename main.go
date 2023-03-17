@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
-	"runtime"
 	"syscall"
 )
 
@@ -31,7 +30,7 @@ func init() {
 const addr = "0.0.0.0:20220"
 
 func main() {
-	fmt.Printf("开始服务：http://%s\n", addr)
+	fmt.Printf("开始服务：//%s\n", addr)
 	server := http.Server{
 		Addr: addr,
 	}
@@ -65,11 +64,6 @@ func whenInterrupt() {
 // 不知什么原因，在 vn007+ 结束程序后，占用的端口不会释放，需要 kill -9 本程序的进程才能释放端口
 // 强制结束本程序的命令：kill -9 $(pidof myrouter)
 func killServer() {
-	// 仅在 Linux 下 kill 本程序
-	if runtime.GOOS != "linux" {
-		return
-	}
-
 	path, err := os.Executable()
 	if err != nil {
 		fmt.Printf("无法执行中断处理程序：获取执行文件的路径出错：%s\n", err)
