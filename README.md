@@ -29,7 +29,7 @@ POST `/api/wol`
 
 1. 开一个终端（A）使用`adb`连接路由器，进入路由器的`shell`，备份`adbd-init`文件：`cp /etc/init.d/adbd-init /etc/init.d/adbd-init.bak`
 2. 再开一个终端（B），工作路径在本地电脑下，拉取`adbd-init`文件到本地：`adb pull /etc/init.d/adbd-init ./`
-3. 编辑`adbd-init`，在`start)`的`case`最后面，添加启动脚本：`/home/donet/bin/myrouter/myrouter.sh`
+3. 编辑`adbd-init`，在`start)`的`case`最后面，添加启动脚本：`/home/do/bin/myrouter/myrouter.sh`
 4. 切到终端A，在路由器`shell`中执行：`mount -o remount / /`
 5. 切到终端B，将修改后的`adbd-init`推送到路由器中：`adb push ./adbd-init /etc/init.d/`
 6. 切换到终端A，设置权限：`chmod 644 /etc/init.d/adbd-init`
