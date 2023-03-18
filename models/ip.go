@@ -6,5 +6,5 @@ type IPAddrs struct {
 	IPv6 string `json:"ipv6"`
 
 	// 所属的路由器
-	Belongs string `json:"belongs"`
+	From string `json:"from"`
 }

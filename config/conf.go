@@ -10,9 +10,9 @@ type Config struct {
 
 	// 管理员账号
 	Router struct {
-		// Belongs 所属的路由器。用于根据路由器生成不同的对象
-		// 可选择 "Belongs"、"JDC"。留空时默认为 "JDC"
-		Belongs string `json:"belongs"`
+		// From 所属的路由器。用于根据路由器生成不同的对象
+		// 可选择 "From"、"JDC"。留空时默认为 "JDC"
+		From string `json:"from"`
 
 		Username string `json:"username"`
 		Passwd   string `json:"passwd"`

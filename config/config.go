@@ -37,7 +37,7 @@ func init() {
 	}
 
 	// 设置默认值
-	if strings.TrimSpace(Conf.Router.Belongs) == "" {
-		Conf.Router.Belongs = jdc.Belongs
+	if strings.TrimSpace(Conf.Router.From) == "" {
+		Conf.Router.From = jdc.From
 	}
 }

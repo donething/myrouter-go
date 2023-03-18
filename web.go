@@ -22,15 +22,15 @@ import (
 var router interfaces.Router
 
 func init() {
-	switch Conf.Router.Belongs {
-	case jdc.Belongs:
+	switch Conf.Router.From {
+	case jdc.From:
 		router = &jdc.JDC{Username: Conf.Router.Username, Passwd: Conf.Router.Passwd}
 
-	case vn007p.Belongs:
+	case vn007p.From:
 		router = &vn007p.Vn007{Username: Conf.Router.Username, Passwd: Conf.Router.Passwd}
 
 	default:
-		panic("未知的路由器：" + Conf.Router.Belongs)
+		panic("未知的路由器：" + Conf.Router.From)
 	}
 }
 

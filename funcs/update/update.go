@@ -63,7 +63,7 @@ func up() error {
 		return fmt.Errorf("获取到的 IPv4、IPv6 都为空")
 	}
 
-	ip.Belongs = config.Conf.Router.Belongs
+	ip.From = config.Conf.Router.From
 	fmt.Printf("此次获取的 IP 地址：%+v\n", ip)
 	if myIPAddrs == nil || ip.IPv4 != myIPAddrs.IPv4 || ip.IPv6 != myIPAddrs.IPv6 {
 		myIPAddrs = ip

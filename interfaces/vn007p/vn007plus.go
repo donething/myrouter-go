@@ -11,8 +11,8 @@ import (
 	"myrouter/config"
 )
 
-// Belongs 所属的路由器。用于根据路由器生成不同的对象
-const Belongs = "Vn007"
+// From 所属的路由器。用于根据路由器生成不同的对象
+const From = "Vn007"
 
 // Vn007 路由器
 type Vn007 struct {
