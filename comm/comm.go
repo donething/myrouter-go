@@ -1,6 +1,11 @@
 package comm
 
-import "myrouter/push"
+import (
+	"github.com/donething/utils-go/dohttp"
+	"myrouter/comm/push"
+)
+
+var Client = dohttp.New(true, false)
 
 // Panic 出错后退出
 func Panic(err error) {

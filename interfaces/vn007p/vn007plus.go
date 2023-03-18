@@ -1,24 +1,27 @@
-package vn007plus
+package vn007p
 
 import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"github.com/donething/utils-go/dohttp"
 	"io"
 	"math/rand"
-	. "myrouter/configs"
-	"time"
+	"myrouter/comm"
+	"myrouter/config"
 )
 
-// 路由器账号实体，每个账号密码对应一个实体
-type account struct {
-	username  string
-	passwd    string
-	userLevel string
-	sessionId string
-	client    dohttp.DoClient
+// Belongs 所属的路由器。用于根据路由器生成不同的对象
+const Belongs = "Vn007"
+
+// Vn007 路由器
+type Vn007 struct {
+	Username string
+	Passwd   string
+
+	UserLevel string
+	// 自动设置
+	SessionId string
 }
 
 const (
@@ -33,34 +36,28 @@ const (
 )
 
 var (
+	url = "http://%s/cgi-bin/http.cgi"
+
 	headers = map[string]string{
-		"Host": Conf.IP,
+		"Host": config.Conf.Gateway,
 		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, " +
 			"like Gecko) Chrome/98.0.4758.102 Safari/537.36",
 		"X-Requested-With": "XMLHttpRequest",
 	}
 )
 
-// Get 获取账号实体，每个账号密码对应一个路由器账号实体
-func Get(username string, passwd string) *account {
-	return &account{
-		username: username,
-		passwd:   passwd,
-		client:   dohttp.New(10*time.Second, true, false),
-	}
-}
-
-// Login 登录
+// Login 登录路由器
+//
 // 在文件中 /js/login.js
-func (a *account) Login() error {
+func (r *Vn007) Login() error {
 	// 先需要从服务端获取登录 Token
-	bs, err := a.client.PostJSONObj(PostURL, genPostBasic(cmdNextLoginTime, mGet, ""), headers)
+	bs, err := comm.Client.PostJSONObj(url, genPostBasic(cmdNextLoginTime, mGet, ""), headers)
 	if err != nil {
 		return fmt.Errorf("获取登录前的 Token 出错：%w\n", err)
 	}
 
 	// 解析，获取 Token
-	var loginTimeResp LoginTimeResp
+	var loginTimeResp loginTimeResp
 	err = json.Unmarshal(bs, &loginTimeResp)
 	if err != nil {
 		return fmt.Errorf("解析获取登录前的 Token 的响应出错：%w\n", err)
@@ -72,7 +69,7 @@ func (a *account) Login() error {
 	// 加密密码，以供登录
 	var pwdHash string
 	h := sha256.New()
-	_, err = io.WriteString(h, loginTimeResp.Token+a.passwd)
+	_, err = io.WriteString(h, loginTimeResp.Token+r.Passwd)
 	if err != nil {
 		return fmt.Errorf("加密登录密码出错：%w\n", err)
 	}
@@ -83,19 +80,20 @@ func (a *account) Login() error {
 	var ss = fmt.Sprintf("%x", md5.Sum([]byte(fmt.Sprintf("%f", rand.Float32())))) +
 		fmt.Sprintf("%x", md5.Sum([]byte(fmt.Sprintf("%f", rand.Float32()))))
 	var data = genPostBasic(cmdLogin, mPost, ss)
-	var loginData = LoginData{
-		PostBasic:     data,
-		Username:      a.username,
+	var loginData = loginData{
+		postBasic:     data,
+		Username:      r.Username,
 		Passwd:        pwdHash,
 		IsAutoUpgrade: "0",
 	}
-	bs, err = a.client.PostJSONObj(PostURL, loginData, headers)
+
+	bs, err = comm.Client.PostJSONObj(url, loginData, headers)
 	if err != nil {
 		return fmt.Errorf("发送登录请求出错：%w\n", err)
 	}
 
 	// 解析登录结果
-	var loginResp LoginResp
+	var loginResp loginResp
 	err = json.Unmarshal(bs, &loginResp)
 	if err != nil {
 		return fmt.Errorf("解析登录响应出错：%w\n", err)
@@ -109,20 +107,20 @@ func (a *account) Login() error {
 	}
 
 	// 登录成功
-	a.sessionId = loginResp.SessionID
+	r.SessionId = loginResp.SessionID
 	return nil
 }
 
 // Reboot 重启路由器
-func (a *account) Reboot() error {
+func (r *Vn007) Reboot() error {
 	// 执行请求
-	bs, err := a.client.PostJSONObj(PostURL, genPostBasic(cmdReboot, mPost, a.sessionId), headers)
+	bs, err := comm.Client.PostJSONObj(url, genPostBasic(cmdReboot, mPost, r.SessionId), headers)
 	if err != nil {
 		return fmt.Errorf("发送重启请求出错：%w\n", err)
 	}
 
 	// 解析
-	var rebootResp RebootResp
+	var rebootResp rebootResp
 	err = json.Unmarshal(bs, &rebootResp)
 	// 成功执行重启时不会返回任何内容，所以排除响应长度为 0 的错误
 	if err != nil && len(bs) != 0 {

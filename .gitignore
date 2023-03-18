@@ -1,9 +1,13 @@
 .idea/
 go.sum
-*.exe
+
 *.log
+
 *.json
-*.bak
+*.json.bak
+
 *.db
 *.db.lock
+
+myrouter.exe
 myrouter

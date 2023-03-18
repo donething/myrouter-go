@@ -6,9 +6,12 @@ import (
 	"html/template"
 	"math"
 	"myrouter/comm"
-	. "myrouter/configs"
+	"myrouter/config"
+	. "myrouter/config"
 	"myrouter/funcs/wol"
-	"myrouter/models/vn007plus"
+	"myrouter/interfaces"
+	"myrouter/interfaces/jdc"
+	"myrouter/interfaces/vn007p"
 	"net/http"
 	"strconv"
 	"strings"
@@ -16,7 +19,20 @@ import (
 )
 
 // 登录路由器使用的账号
-var admin = vn007plus.Get(Conf.Admin.Username, Conf.Admin.Passwd)
+var router interfaces.Router
+
+func init() {
+	switch Conf.Router.Belongs {
+	case jdc.Belongs:
+		router = &jdc.JDC{Username: Conf.Router.Username, Passwd: Conf.Router.Passwd}
+
+	case vn007p.Belongs:
+		router = &vn007p.Vn007{Username: Conf.Router.Username, Passwd: Conf.Router.Passwd}
+
+	default:
+		panic("未知的路由器：" + Conf.Router.Belongs)
+	}
+}
 
 // UseAuth 验证请求的中间件
 // 中间件 https://www.alexedwards.net/blog/making-and-using-middleware
@@ -56,7 +72,7 @@ func UseAuth(next http.Handler) http.HandlerFunc {
 		}
 
 		// 根据时间戳 t(毫秒)，计算 sha256。计算目标为 (操作验证码 + t + 操作验证码)
-		sum := sha256.Sum256([]byte(Conf.Auth + t + Conf.Auth))
+		sum := sha256.Sum256([]byte(config.Conf.Auth + t + config.Conf.Auth))
 		sumStr := fmt.Sprintf("%x", sum)
 		// 验证不通过，抛弃此次请求
 		if strings.ToLower(sumStr) != strings.ToLower(s) {
@@ -81,7 +97,7 @@ func UseLogin(next http.Handler) http.HandlerFunc {
 		}
 
 		// 登录路由器
-		err := admin.Login()
+		err := router.Login()
 
 		// 登录失败，无法继续下一步
 		if err != nil {
@@ -107,7 +123,7 @@ func Index(w http.ResponseWriter, _ *http.Request) {
 // Reboot 重启路由器
 func Reboot(w http.ResponseWriter, _ *http.Request) {
 	msg := "正在重启路由器…"
-	err := admin.Reboot()
+	err := router.Reboot()
 	if err != nil {
 		msg = fmt.Sprintf("重启路由器出错：%s", err)
 	}
@@ -118,14 +134,14 @@ func Reboot(w http.ResponseWriter, _ *http.Request) {
 
 // WakeupPC 唤醒网络设备
 func WakeupPC(w http.ResponseWriter, _ *http.Request) {
-	if Conf.WOL.MACAddr == "" {
+	if config.Conf.WOL.MACAddr == "" {
 		_, err := w.Write([]byte("无法网络唤醒电脑：目标 MAC 地址为空"))
 		comm.Panic(err)
 		return
 	}
 
 	msg := "正在网络唤醒电脑…"
-	err := wol.Wakeup(Conf.WOL.MACAddr)
+	err := wol.Wakeup(config.Conf.WOL.MACAddr)
 	if err != nil {
 		msg = fmt.Sprintf("无法网络唤醒电脑：%s", err)
 	}

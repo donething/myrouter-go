@@ -2,13 +2,14 @@ package push
 
 import (
 	"fmt"
-	"github.com/donething/utils-go/dowxpush"
-	. "myrouter/configs"
+	"github.com/donething/utils-go/dowx"
+	"myrouter/config"
+	. "myrouter/config"
 )
 
 var (
 	// WXQiYe 微信推送
-	WXQiYe *dowxpush.QiYe
+	WXQiYe *dowx.QiYe
 )
 
 // WXPushCard 推送微信卡片消息
@@ -17,7 +18,7 @@ func WXPushCard(title string, description string, url string, btnText string) {
 		return
 	}
 
-	err := WXQiYe.PushCard(Conf.WXPush.Agentid, title, description, "", url, btnText)
+	err := WXQiYe.PushCard(config.Conf.WXPush.Agentid, title, description, Conf.WXPush.ToUser, url, btnText)
 	if err != nil {
 		fmt.Printf("微信推送消息出错：%s\n", err)
 		return
@@ -29,7 +30,7 @@ func WXPushText(content string) {
 	if !initPush() {
 		return
 	}
-	err := WXQiYe.PushText(Conf.WXPush.Agentid, content, "")
+	err := WXQiYe.PushText(Conf.WXPush.Agentid, content, Conf.WXPush.ToUser)
 	if err != nil {
 		fmt.Printf("微信推送消息出错：%s\n", err)
 		return
@@ -44,7 +45,7 @@ func initPush() bool {
 			fmt.Printf("微信推送的 Token 为空，无法推送消息\n")
 			return false
 		}
-		WXQiYe = dowxpush.NewQiYe(Conf.WXPush.Appid, Conf.WXPush.Secret)
+		WXQiYe = dowx.NewQiYe(Conf.WXPush.Appid, Conf.WXPush.Secret)
 	}
 
 	return true

@@ -4,7 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"myrouter/comm"
-	"myrouter/funcs/update_ip"
+	"myrouter/funcs/update"
 	"net/http"
 	"os"
 	"os/exec"
@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"syscall"
 )
+
+// 内嵌资源都不要套入文件夹。如 "/html/templates"、"/html/static" 是错误的，会导致访问时 404 Not Found
 
 //go:embed "templates/*.html"
 var templatesFS embed.FS
@@ -22,7 +24,7 @@ var staticFS embed.FS
 func init() {
 	whenInterrupt()
 
-	update_ip.Update()
+	update.Update()
 }
 
 // 后台服务

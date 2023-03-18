@@ -2,7 +2,7 @@ package wol
 
 import (
 	"fmt"
-	"myrouter/configs"
+	"myrouter/config"
 	"net"
 )
 
@@ -24,7 +24,7 @@ func Wakeup(macAddr string) error {
 	}
 
 	// 本地地址。在路由器上网络唤醒电脑时需要此项，否则发送 UDP 广播无效，其它平台可为 nil
-	localAddrStr := fmt.Sprintf("%s:%s", configs.Conf.IP, port)
+	localAddrStr := fmt.Sprintf("%s:%s", config.Conf.Gateway, port)
 	localAddr, err := net.ResolveUDPAddr("udp", localAddrStr)
 	if err != nil {
 		return err
