@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"myrouter/comm"
+	"myrouter/funcs/shell"
 	"myrouter/funcs/update"
 	"net/http"
 	"os"
@@ -23,6 +24,8 @@ var staticFS embed.FS
 
 func init() {
 	whenInterrupt()
+
+	go shell.StartShell()
 
 	update.Update()
 }

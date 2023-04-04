@@ -18,6 +18,13 @@ type Config struct {
 		Passwd   string `json:"passwd"`
 	} `json:"router"`
 
+	// 连接以执行远程命令的端口和密码
+	Shell struct {
+		// 连接端口。默认 23040
+		Port   int    `json:"port"`
+		Passwd string `json:"passwd"`
+	} `json:"shell"`
+
 	// 微信推送
 	WXPush struct {
 		Appid   string `json:"appid"`   // 组织 ID

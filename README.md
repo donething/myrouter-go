@@ -23,6 +23,10 @@ POST `/api/wol`
         * 允许此设备唤醒计算机 允许
         * 只允许唤数据包唤醒计算机
 
+## 远程执行Shell
+
+使用`tcp`连接工具。如在`Linux`下执行`nc 192.168.1.1 23040`连接
+
 # 自启动运行
 
 自启动，参考 [007+CPE刷clnc小白教程](https://yaohuo.me/bbs/book_view.aspx?sitei=1000&classid=203&id=1097747&vpage=&lpage=)
