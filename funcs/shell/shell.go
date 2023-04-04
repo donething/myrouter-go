@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+const defaultPort = 23040
+
 // StartShell 启用 Shell 服务
 func StartShell() {
 	err := startShell()
@@ -24,7 +26,7 @@ func StartShell() {
 func startShell() error {
 	port := config.Conf.Shell.Port
 	if port == 0 {
-		port = 23040
+		port = defaultPort
 	}
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
@@ -55,7 +57,7 @@ func handlePipe(conn net.Conn) {
 
 	defer conn.Close()
 
-	_, err := conn.Write([]byte("Enter password(baidu): "))
+	_, err := conn.Write([]byte("Enter password: "))
 	dolog.CkPanic(err)
 
 	reader := bufio.NewReader(conn)
