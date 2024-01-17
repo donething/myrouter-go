@@ -1,3 +1,5 @@
+// Package update 更新 本路由器的 IP
+
 package update
 
 import (
@@ -15,7 +17,7 @@ import (
 )
 
 // 临时保存上次获取的 IP 地址，以便与本次获取的相比较
-var myIPAddrs *models.IPAddrs
+var myIPAddrs *models.IPAddr
 
 // Update 推送 IP 地址到远程服务器
 //
@@ -99,8 +101,8 @@ func up() error {
 // 在运营商重新分配IP地址后，将无法获取到新的IP信息，需要用 GetLocalIPAddrWithCmd()
 //
 // @see https://www.cnblogs.com/hirampeng/p/11478995.html
-func GetLocalIPAddr() (*models.IPAddrs, error) {
-	var ipAddrs = new(models.IPAddrs)
+func GetLocalIPAddr() (*models.IPAddr, error) {
+	var ipAddrs = new(models.IPAddr)
 
 	// 获取所有网卡
 	addrs, err := net.InterfaceAddrs()
@@ -141,8 +143,8 @@ func GetLocalIPAddr() (*models.IPAddrs, error) {
 // @see https://superuser.com/a/1057290
 //
 // @see https://stackoverflow.com/a/41038684/8179418
-func GetLocalIPAddrWithCmd() (*models.IPAddrs, error) {
-	var ipAddrs = new(models.IPAddrs)
+func GetLocalIPAddrWithCmd() (*models.IPAddr, error) {
+	var ipAddrs = new(models.IPAddr)
 	outV6, errV6 := exec.Command("bash", "-c",
 		"ip -6 addr | grep inet6 | awk -F '[ \\t]+|/' '{print $3}' | grep -v ^::1 | grep -v ^fe80",
 	).Output()

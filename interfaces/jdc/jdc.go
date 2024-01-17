@@ -1,7 +1,9 @@
 package jdc
 
+import "myrouter/models"
+
 // From 所属的路由器。用于根据路由器生成不同的对象
-const From = "JDC"
+const From models.Router = "JDC"
 
 // JDC 京东云无线宝 路由器
 type JDC struct {

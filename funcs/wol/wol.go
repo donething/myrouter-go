@@ -1,3 +1,5 @@
+// Package wol 网络唤醒
+
 package wol
 
 import (

@@ -1,3 +1,5 @@
+// Package shell 可通过本程序，远程执行 Shell
+
 package shell
 
 import (

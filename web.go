@@ -12,6 +12,7 @@ import (
 	"myrouter/interfaces"
 	"myrouter/interfaces/jdc"
 	"myrouter/interfaces/vn007p"
+	"myrouter/models"
 	"net/http"
 	"strconv"
 	"strings"
@@ -22,7 +23,7 @@ import (
 var router interfaces.Router
 
 func init() {
-	switch Conf.Router.From {
+	switch models.Router(Conf.Router.From) {
 	case jdc.From:
 		router = &jdc.JDC{Username: Conf.Router.Username, Passwd: Conf.Router.Passwd}
 

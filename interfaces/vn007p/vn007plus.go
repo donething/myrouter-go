@@ -9,10 +9,11 @@ import (
 	"math/rand"
 	"myrouter/comm"
 	"myrouter/config"
+	"myrouter/models"
 )
 
 // From 所属的路由器。用于根据路由器生成不同的对象
-const From = "Vn007"
+const From models.Router = "Vn007"
 
 // Vn007 路由器
 type Vn007 struct {
