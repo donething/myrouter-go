@@ -2,10 +2,8 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"github.com/donething/utils-go/doconf"
-	"github.com/donething/utils-go/dolog"
-	"myrouter/interfaces/jdc"
+	"myrouter/comm/logger"
 	"os"
 )
 
@@ -28,15 +26,22 @@ func init() {
 
 	// 读取配置
 	exist, err := doconf.Init(confPath, &Conf)
-	dolog.CkPanic(err)
+	if err != nil {
+		// 不能用 push.Panic() 会和 push 包导致"import cycle not allowed"
+		panic(err)
+	}
 
 	if !exist {
-		fmt.Printf("已创建配置文件，请填写后，重新运行程序\n")
+		logger.Warn.Printf("已创建配置文件，请填写后，重新运行程序\n")
 		os.Exit(0)
 	}
 
 	// 设置默认值
-	if Conf.Router.From == "" {
-		Conf.Router.From = jdc.From
+	if Conf.Router.Logo == "" {
+		// 不使用常量 redmi.Logo，避免循环导入包
+		Conf.Router.Logo = "RedmiAX6000"
+	}
+	if Conf.Clash.RulesPath == "" {
+		Conf.Clash.RulesPath = "/data/clash/yamls/rules.yaml"
 	}
 }

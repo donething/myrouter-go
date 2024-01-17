@@ -3,14 +3,15 @@ package push
 import (
 	"fmt"
 	"github.com/donething/utils-go/dowx"
-	"myrouter/config"
+	"myrouter/comm/logger"
 	. "myrouter/config"
 )
 
-var (
-	// WXQiYe 微信推送
-	WXQiYe *dowx.QiYe
-)
+// TAG 发送消息时的来源提示
+var TAG = fmt.Sprintf("路由器[%s]", Conf.Router.Logo)
+
+// WXQiYe 微信推送
+var WXQiYe *dowx.QiYe
 
 // WXPushCard 推送微信卡片消息
 func WXPushCard(title string, description string, url string, btnText string) {
@@ -18,21 +19,24 @@ func WXPushCard(title string, description string, url string, btnText string) {
 		return
 	}
 
-	err := WXQiYe.PushCard(config.Conf.WXPush.Agentid, title, description, Conf.WXPush.ToUser, url, btnText)
+	t := fmt.Sprintf("%s %s", TAG, title)
+	err := WXQiYe.PushCard(Conf.WXPush.Agentid, t, description, Conf.WXPush.ToUser, url, btnText)
 	if err != nil {
-		fmt.Printf("微信推送消息出错：%s\n", err)
+		logger.Error.Printf("微信推送消息出错：%s。消息标题：'%s'\n", err, title)
 		return
 	}
 }
 
-// WXPushText 推送微信文本消息
-func WXPushText(content string) {
+// WXPushMsg 推送微信文本消息
+func WXPushMsg(title, content string) {
 	if !initPush() {
 		return
 	}
-	err := WXQiYe.PushText(Conf.WXPush.Agentid, content, Conf.WXPush.ToUser)
+
+	t := fmt.Sprintf("%s %s", TAG, title)
+	err := WXQiYe.PushTextMsg(Conf.WXPush.Agentid, t, content, Conf.WXPush.ToUser)
 	if err != nil {
-		fmt.Printf("微信推送消息出错：%s\n", err)
+		logger.Error.Printf("微信推送消息出错：%s。消息标题：'%s'\n", err, title)
 		return
 	}
 }
@@ -42,9 +46,10 @@ func initPush() bool {
 	// 初始化微信推送
 	if WXQiYe == nil {
 		if Conf.WXPush.Appid == "" || Conf.WXPush.Secret == "" {
-			fmt.Printf("微信推送的 Token 为空，无法推送消息\n")
+			logger.Warn.Printf("无法推送消息：没有设置企业微信的 token\n")
 			return false
 		}
+
 		WXQiYe = dowx.NewQiYe(Conf.WXPush.Appid, Conf.WXPush.Secret)
 	}
 

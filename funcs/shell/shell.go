@@ -5,22 +5,23 @@ package shell
 import (
 	"bufio"
 	"fmt"
-	"github.com/donething/utils-go/dolog"
 	"io"
-	"log"
+	"myrouter/comm/logger"
+	"myrouter/comm/push"
 	"myrouter/config"
 	"net"
 	"os/exec"
 	"strings"
 )
 
-const defaultPort = 23040
+const defaultPort = 23095
 
 // StartShell 启用 Shell 服务
 func StartShell() {
 	err := startShell()
 	if err != nil {
-		fmt.Println(err)
+		logger.Error.Printf(fmt.Sprintf("开始 Shell 出错：%s\n", err))
+		push.WXPushMsg("开始 Shell 出错", err.Error())
 	}
 }
 
@@ -36,14 +37,14 @@ func startShell() error {
 		return fmt.Errorf("shell unable to bind to port: %w", err)
 	}
 
-	log.Printf("shell Listening on 0.0.0.0:%d\n", port)
+	logger.Info.Printf("Shell Listening: 0.0.0.0:%d\n", port)
 
 	for {
 		conn, err := listener.Accept()
-		log.Println("shell Received connection")
 		if err != nil {
 			return fmt.Errorf("shell unable to accept connection: %w", err)
 		}
+		logger.Info.Println("shell Received connection")
 
 		go handlePipe(conn)
 	}
@@ -53,14 +54,17 @@ func startShell() error {
 func handlePipe(conn net.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Printf("run time panic: %v", err)
+			logger.Error.Printf("handlePipe 出错: %v\n", err)
+			push.WXPushMsg("handlePipe 出错：%s", fmt.Sprintf("%v", err))
 		}
 	}()
 
 	defer conn.Close()
 
 	_, err := conn.Write([]byte("Enter password: "))
-	dolog.CkPanic(err)
+	if err != nil {
+		panic(err)
+	}
 
 	reader := bufio.NewReader(conn)
 	input, _ := reader.ReadString('\n')
@@ -68,12 +72,13 @@ func handlePipe(conn net.Conn) {
 
 	if input != config.Conf.Shell.Passwd {
 		_, err = conn.Write([]byte("Incorrect password.\n"))
-		dolog.CkPanic(err)
-		return
+		panic(err)
 	}
 
 	_, err = conn.Write([]byte("Access granted.\n"))
-	dolog.CkPanic(err)
+	if err != nil {
+		panic(err)
+	}
 
 	cmd := exec.Command("/bin/sh", "-i")
 
@@ -83,5 +88,7 @@ func handlePipe(conn net.Conn) {
 	go io.Copy(conn, rp)
 
 	err = cmd.Run()
-	dolog.CkPanic(err)
+	if err != nil {
+		panic(err)
+	}
 }

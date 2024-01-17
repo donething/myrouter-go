@@ -7,13 +7,12 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
-	"myrouter/comm"
+	"myrouter/comm/httpclient"
 	"myrouter/config"
-	"myrouter/models"
 )
 
-// From 所属的路由器。用于根据路由器生成不同的对象
-const From models.Router = "Vn007"
+// Logo 所属的路由器。用于根据路由器生成不同的对象
+const Logo config.Logo = "Vn007"
 
 // Vn007 路由器
 type Vn007 struct {
@@ -52,13 +51,13 @@ var (
 // 在文件中 /js/login.js
 func (r *Vn007) Login() error {
 	// 先需要从服务端获取登录 Token
-	bs, err := comm.Client.PostJSONObj(url, genPostBasic(cmdNextLoginTime, mGet, ""), headers)
+	bs, err := httpclient.Client.PostJSONObj(url, genPostBasic(cmdNextLoginTime, mGet, ""), headers)
 	if err != nil {
 		return fmt.Errorf("获取登录前的 Token 出错：%w\n", err)
 	}
 
 	// 解析，获取 Token
-	var loginTimeResp loginTimeResp
+	var loginTimeResp LoginTimeResp
 	err = json.Unmarshal(bs, &loginTimeResp)
 	if err != nil {
 		return fmt.Errorf("解析获取登录前的 Token 的响应出错：%w\n", err)
@@ -81,20 +80,20 @@ func (r *Vn007) Login() error {
 	var ss = fmt.Sprintf("%x", md5.Sum([]byte(fmt.Sprintf("%f", rand.Float32())))) +
 		fmt.Sprintf("%x", md5.Sum([]byte(fmt.Sprintf("%f", rand.Float32()))))
 	var data = genPostBasic(cmdLogin, mPost, ss)
-	var loginData = loginData{
-		postBasic:     data,
+	var loginData = LoginData{
+		BasicPost:     data,
 		Username:      r.Username,
 		Passwd:        pwdHash,
 		IsAutoUpgrade: "0",
 	}
 
-	bs, err = comm.Client.PostJSONObj(url, loginData, headers)
+	bs, err = httpclient.Client.PostJSONObj(url, loginData, headers)
 	if err != nil {
 		return fmt.Errorf("发送登录请求出错：%w\n", err)
 	}
 
 	// 解析登录结果
-	var loginResp loginResp
+	var loginResp LoginResp
 	err = json.Unmarshal(bs, &loginResp)
 	if err != nil {
 		return fmt.Errorf("解析登录响应出错：%w\n", err)
@@ -115,13 +114,13 @@ func (r *Vn007) Login() error {
 // Reboot 重启路由器
 func (r *Vn007) Reboot() error {
 	// 执行请求
-	bs, err := comm.Client.PostJSONObj(url, genPostBasic(cmdReboot, mPost, r.SessionId), headers)
+	bs, err := httpclient.Client.PostJSONObj(url, genPostBasic(cmdReboot, mPost, r.SessionId), headers)
 	if err != nil {
 		return fmt.Errorf("发送重启请求出错：%w\n", err)
 	}
 
 	// 解析
-	var rebootResp rebootResp
+	var rebootResp RebootResp
 	err = json.Unmarshal(bs, &rebootResp)
 	// 成功执行重启时不会返回任何内容，所以排除响应长度为 0 的错误
 	if err != nil && len(bs) != 0 {

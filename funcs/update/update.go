@@ -6,7 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/donething/utils-go/dohttp"
-	"myrouter/comm"
+	"myrouter/comm/httpclient"
+	"myrouter/comm/logger"
 	"myrouter/comm/push"
 	"myrouter/config"
 	"myrouter/models"
@@ -26,27 +27,27 @@ var myIPAddrs *models.IPAddr
 // 在获取出错后，暂停获取
 func Update() {
 	if config.Conf.Remote.UpdateIPAddr == "" {
-		fmt.Printf("服务器地址没有配置，无法推送 IP 地址\n")
-		push.WXPushCard("[路由器] 服务器地址没有配置", "无法推送 IP 地址", "", "")
+		logger.Warn.Printf("无法推送 IP 地址：没有配置服务器地址\n")
+		push.WXPushMsg("无法推送IP 地址", "没有配置服务器地址")
 		return
 	}
 
 	// 执行程序后先推送一次 IP 地址
 	err := up()
 	if err != nil {
-		fmt.Printf("推送 IP 地址出错：%s\n", err)
-		push.WXPushCard("[路由器] 推送 IP 地址出错", err.Error(), "", "")
+		logger.Error.Printf("推送 IP 地址出错：%s\n", err)
+		push.WXPushMsg("推送 IP 地址出错", err.Error())
 		return
 	}
 
 	ticker := time.NewTicker(60 * time.Second)
 	go func() {
 		for range ticker.C {
-			err := up()
+			err = up()
 			if err != nil {
 				ticker.Stop()
-				fmt.Printf("推送 IP 地址出错，暂停定时获取 IP 地址：%s\n", err)
-				push.WXPushCard("[路由器] 推送 IP 地址出错", err.Error(), "", "")
+				logger.Error.Printf("推送 IP 地址出错(暂停定时获取IP地址)：%s\n", err)
+				push.WXPushMsg("推送 IP 地址出错", err.Error())
 			}
 		}
 	}()
@@ -65,34 +66,34 @@ func up() error {
 		return fmt.Errorf("获取到的 IPv4、IPv6 都为空")
 	}
 
-	ip.From = config.Conf.Router.From
-	fmt.Printf("此次获取的 IP 地址：%+v\n", ip)
+	ip.From = config.Conf.Router.Logo
+	logger.Info.Printf("此次获取的 IP 地址：%+v\n", ip)
 	if myIPAddrs == nil || ip.IPv4 != myIPAddrs.IPv4 || ip.IPv6 != myIPAddrs.IPv6 {
 		myIPAddrs = ip
-		fmt.Printf("IP 地址已改变，向远程发送新的地址\n")
+		logger.Info.Printf("IP 地址已改变，向远程发送新的地址\n")
 
 		// 发送推送请求
-		bs, err := comm.Client.PostJSONObj(config.Conf.Remote.UpdateIPAddr, *myIPAddrs, nil)
+		bs, err := httpclient.Client.PostJSONObj(config.Conf.Remote.UpdateIPAddr, *myIPAddrs, nil)
 		if err != nil {
-			return err
+			return fmt.Errorf("发送推送 IP 的请求出错：%w", err)
 		}
 
 		// 分析结果
-		var result models.JResult
+		var result models.Result
 		err = json.Unmarshal(bs, &result)
 		if err != nil {
 			return fmt.Errorf("解析远程响应出错 '%s' ==> '%s'", err, string(bs))
 		}
 		if result.Code != 0 {
-			return fmt.Errorf("%s", result.Msg)
+			return fmt.Errorf("推送 IP 失败：%s", result.Msg)
 		}
 
-		push.WXPushCard("[路由器] 已推送 IP 地址", "已推送路由器 Gateway 地址到远程服务器", "", "")
-		fmt.Printf("已推送路由器 IP 地址到远程服务器\n")
+		push.WXPushMsg("已推送 IP 地址", "已推送 IP 地址到远程服务器")
+		logger.Info.Printf("已推送路由器 IP 地址到远程服务器\n")
 		return nil
 	}
 
-	fmt.Printf("IP 地址信息没有变化，无需发送到远程\n")
+	logger.Info.Printf("无需发送到远程：IP 地址信息没有变化\n")
 	return nil
 }
 

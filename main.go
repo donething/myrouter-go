@@ -3,9 +3,12 @@ package main
 import (
 	"embed"
 	"fmt"
-	"myrouter/comm"
+	"myrouter/comm/logger"
+	"myrouter/comm/push"
+	"myrouter/funcs/clash"
 	"myrouter/funcs/shell"
 	"myrouter/funcs/update"
+	"myrouter/routers"
 	"net/http"
 	"os"
 	"os/exec"
@@ -27,15 +30,14 @@ func init() {
 
 	go shell.StartShell()
 
-	update.Update()
+	go update.Update()
 }
 
 // 后台服务
 // 使用 "0.0.0.0"可以同时监听 IPv4、IPv6
-const addr = "0.0.0.0:20220"
+const addr = "0.0.0.0:25816"
 
 func main() {
-	fmt.Printf("开始服务：//%s\n", addr)
 	server := http.Server{
 		Addr: addr,
 	}
@@ -47,11 +49,19 @@ func main() {
 	// 注意最后的"/"不能省略，否则会返回首页
 	http.Handle("/static/", sfs)
 
+	// 基本功能
 	http.Handle("/", UseAuth(UseLogin(http.HandlerFunc(Index))))
-	http.Handle("/api/reboot", UseAuth(UseLogin(http.HandlerFunc(Reboot))))
-	http.Handle("/api/wol", UseAuth(UseLogin(http.HandlerFunc(WakeupPC))))
+	http.Handle("/api/reboot", UseAuth(UseLogin(http.HandlerFunc(routers.Reboot))))
+	http.Handle("/api/wol", UseAuth(UseLogin(http.HandlerFunc(routers.WakeupPC))))
 
-	comm.Panic(server.ListenAndServe())
+	// Clash 辅助工具
+	http.Handle("/api/clash/rules/get", UseAuth(http.HandlerFunc(clash.GetRules)))
+	http.Handle("/api/clash/rules/save", UseAuth(http.HandlerFunc(clash.SaveRules)))
+	http.Handle("/api/clash/rules/backtolast", UseAuth(http.HandlerFunc(clash.BackToLastRules)))
+
+	// 开始服务
+	logger.Info.Printf("开始服务: //%s\n", addr)
+	push.Panic(server.ListenAndServe())
 }
 
 // 中断处理程序
@@ -60,7 +70,7 @@ func whenInterrupt() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		fmt.Println("\r- Ctrl+C pressed in Terminal")
+		logger.Info.Println("\r- Ctrl+C pressed in Terminal")
 		killServer()
 		os.Exit(0)
 	}()
@@ -71,17 +81,17 @@ func whenInterrupt() {
 func killServer() {
 	path, err := os.Executable()
 	if err != nil {
-		fmt.Printf("无法执行中断处理程序：获取执行文件的路径出错：%s\n", err)
+		logger.Error.Printf("无法执行中断处理程序：获取执行文件的路径出错：%s\n", err)
 		return
 	}
 	cmd := exec.Command("kill", "-9", fmt.Sprintf("$(pidof %s)", filepath.Base(path)))
 	stdout, err := cmd.Output()
 
 	if err != nil {
-		fmt.Println("终结本程序出错：", err.Error())
+		logger.Error.Println("终结本程序出错：", err.Error())
 		return
 	}
 
 	// Print the output
-	fmt.Println("已终结本程序\n", string(stdout))
+	logger.Warn.Println("已终结本程序\n", string(stdout))
 }
