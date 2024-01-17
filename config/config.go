@@ -7,7 +7,6 @@ import (
 	"github.com/donething/utils-go/dolog"
 	"myrouter/interfaces/jdc"
 	"os"
-	"strings"
 )
 
 const (
@@ -37,7 +36,7 @@ func init() {
 	}
 
 	// 设置默认值
-	if strings.TrimSpace(Conf.Router.From) == "" {
+	if Conf.Router.From == "" {
 		Conf.Router.From = jdc.From
 	}
 }

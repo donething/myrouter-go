@@ -6,5 +6,5 @@ type IPAddr struct {
 	IPv6 string `json:"ipv6"`
 
 	// 所属的路由器
-	From string `json:"from"`
+	From Router `json:"from"`
 }

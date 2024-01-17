@@ -1,5 +1,7 @@
 package config
 
+import "myrouter/models"
+
 // Config 配置
 type Config struct {
 	// 操作验证码
@@ -12,7 +14,7 @@ type Config struct {
 	Router struct {
 		// From 所属的路由器。用于根据路由器生成不同的对象
 		// 可选择 "From"、"JDC"。留空时默认为 "JDC"
-		From string `json:"from"`
+		From models.Router `json:"from"`
 
 		Username string `json:"username"`
 		Passwd   string `json:"passwd"`
