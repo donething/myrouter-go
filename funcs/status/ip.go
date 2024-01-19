@@ -1,6 +1,6 @@
-// Package update 更新 本路由器的 IP
+// Package status 更新 本路由器的 IP
 
-package update
+package status
 
 import (
 	"encoding/json"
@@ -20,12 +20,12 @@ import (
 // 临时保存上次获取的 IP 地址，以便与本次获取的相比较
 var myIPAddrs *models.IPAddr
 
-// Update 推送 IP 地址到远程服务器
+// Tick 定时推送 IP 地址到远程服务器
 //
 // **重启服务**将触发立即推送 IP 地址到远程服务器
 //
 // 在获取出错后，暂停获取
-func Update() {
+func Tick() {
 	if config.Conf.Remote.UpdateIPAddr == "" {
 		logger.Warn.Printf("无法推送 IP 地址：没有配置服务器地址\n")
 		push.WXPushMsg("无法推送IP 地址", "没有配置服务器地址")
@@ -66,7 +66,6 @@ func up() error {
 		return fmt.Errorf("获取到的 IPv4、IPv6 都为空")
 	}
 
-	ip.From = config.Conf.Router.Logo
 	logger.Info.Printf("此次获取的 IP 地址：%+v\n", ip)
 	if myIPAddrs == nil || ip.IPv4 != myIPAddrs.IPv4 || ip.IPv6 != myIPAddrs.IPv6 {
 		myIPAddrs = ip

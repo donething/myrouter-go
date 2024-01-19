@@ -5,6 +5,7 @@ import (
 	"github.com/donething/utils-go/doconf"
 	"myrouter/comm/logger"
 	"os"
+	"testing"
 )
 
 const (
@@ -19,6 +20,12 @@ var (
 	// Conf 配置的实例
 	Conf Config
 )
+
+// 避免测试时不传运行程序的参数，导致报错
+var _ = func() bool {
+	testing.Init()
+	return true
+}()
 
 func init() {
 	flag.StringVar(&confPath, "c", name, "指定配置文件的路径")
@@ -43,5 +50,8 @@ func init() {
 	}
 	if Conf.Clash.RulesPath == "" {
 		Conf.Clash.RulesPath = "/data/clash/yamls/rules.yaml"
+	}
+	if Conf.Clash.ConfigPath == "" {
+		Conf.Clash.ConfigPath = "/data/clash/config.yaml"
 	}
 }

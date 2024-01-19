@@ -3,11 +3,14 @@ package main
 import (
 	"embed"
 	"fmt"
+	"github.com/gin-contrib/gzip"
+	"github.com/gin-gonic/gin"
+	"html/template"
+	"io/fs"
 	"myrouter/comm/logger"
 	"myrouter/comm/push"
 	"myrouter/funcs/clash"
 	"myrouter/funcs/shell"
-	"myrouter/funcs/update"
 	"myrouter/routers"
 	"net/http"
 	"os"
@@ -17,51 +20,59 @@ import (
 	"syscall"
 )
 
-// 内嵌资源都不要套入文件夹。如 "/html/templates"、"/html/static" 是错误的，会导致访问时 404 Not Found
-
-//go:embed "templates/*.html"
-var templatesFS embed.FS
-
-//go:embed "static"
-var staticFS embed.FS
-
 func init() {
 	whenInterrupt()
 
 	go shell.StartShell()
 
-	go update.Update()
+	// go status.Tick()
 }
 
 // 后台服务
 // 使用 "0.0.0.0"可以同时监听 IPv4、IPv6
-const addr = "0.0.0.0:25816"
+const port = "25816"
+
+//go:embed assets/*
+var embededFiles embed.FS
 
 func main() {
-	server := http.Server{
-		Addr: addr,
-	}
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.Default()
 
-	// http.FS can be used to create a http Filesystem
-	var sFileSystem = http.FS(staticFS)
-	sfs := http.FileServer(sFileSystem)
-	// Serve static files
-	// 注意最后的"/"不能省略，否则会返回首页
-	http.Handle("/static/", sfs)
+	// 使用 gzip 压缩，语句"gzip.Gzip(gzip.DefaultCompression)"不能放在Middleware()中，否则无效
+	router.Use(gzip.Gzip(gzip.DefaultCompression))
+	router.Use(UseAuth)
 
-	// 基本功能
-	http.Handle("/", UseAuth(UseLogin(http.HandlerFunc(Index))))
-	http.Handle("/api/reboot", UseAuth(UseLogin(http.HandlerFunc(routers.Reboot))))
-	http.Handle("/api/wol", UseAuth(UseLogin(http.HandlerFunc(routers.WakeupPC))))
+	// 内嵌静态资源，不必带着静态资源文件夹
+	// 从嵌入的文件系统中获取assets文件夹
+	assets, _ := fs.Sub(embededFiles, "assets")
+	// 将 assets 文件夹设置为 GIN 的静态文件系统
+	router.StaticFS("/assets", http.FS(assets))
+	// 解析模板文件
+	tmpl, _ := template.ParseFS(embededFiles, "assets/index.html")
+	router.SetHTMLTemplate(tmpl)
+	// 定义路由
+	router.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", nil)
+	})
+
+	// 路由器功能
+	router.POST("/api//router/wol", routers.WakeupPC)
+	router.POST("/api/router/reboot", routers.Reboot)
+	router.GET("/api/router/status", routers.RouterStatus)
 
 	// Clash 辅助工具
-	http.Handle("/api/clash/rules/get", UseAuth(http.HandlerFunc(clash.GetRules)))
-	http.Handle("/api/clash/rules/save", UseAuth(http.HandlerFunc(clash.SaveRules)))
-	http.Handle("/api/clash/rules/backtolast", UseAuth(http.HandlerFunc(clash.BackToLastRules)))
+	router.POST("/api/clash/rule/add", clash.AddRule)
+	router.POST("/api/clash/rule/del", clash.DelRule)
+	router.GET("/api/clash/rules/all", clash.GetRules)
+	router.POST("/api/clash/rule/override", clash.OverrideRules)
+	router.POST("/api/clash/rule/backtolast", clash.BackToLastRules)
+	router.GET("/api/clash/config/proxygroups", clash.GetProxyGroups)
+	router.GET("/api/clash/data/render", clash.GetClashRenderData)
 
 	// 开始服务
-	logger.Info.Printf("开始服务: //%s\n", addr)
-	push.Panic(server.ListenAndServe())
+	logger.Info.Printf("开始服务：http://127.0.0.1:%s\n", port)
+	push.Panic(http.ListenAndServe(":"+port, router))
 }
 
 // 中断处理程序
