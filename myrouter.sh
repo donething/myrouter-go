@@ -8,11 +8,14 @@
 #
 # 参考 https://blog.csdn.net/weixin_45945615/article/details/130319222
 
-if [ "$1" = "stop" ]
-then
-    kill -9 $(pidof myrouter)
-else
-    cd /data/myrouter
-    chmod +x ./myrouter
-    ./myrouter >> /dev/null 2>&1 &
+kill -9 $(pidof myrouter)
+
+if [ "$1" = "stop" ]; then
+  echo "已终止 myouter"
+  exit 0
 fi
+
+cd /data/myrouter
+chmod +x ./myrouter
+./myrouter >> /dev/null 2>&1 &
+echo "已运行 myouter"
