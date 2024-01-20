@@ -48,10 +48,7 @@ func init() {
 		// 不使用常量 redmi.Logo，避免循环导入包
 		Conf.Router.Logo = "RedmiAX6000"
 	}
-	if Conf.Clash.RulesPath == "" {
-		Conf.Clash.RulesPath = "/data/clash/yamls/rules.yaml"
-	}
-	if Conf.Clash.ConfigPath == "" {
-		Conf.Clash.ConfigPath = "/data/clash/config.yaml"
+	if Conf.Clash.DirPath == "" {
+		Conf.Clash.DirPath = "/data/clash"
 	}
 }

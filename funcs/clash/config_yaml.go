@@ -2,14 +2,13 @@ package clash
 
 import (
 	"gopkg.in/yaml.v3"
-	"myrouter/config"
 	"myrouter/models"
 	"os"
 )
 
 // 解析 clash 的配置文件
 func parseConfig() (*models.ClashConfig, error) {
-	yamlFile, err := os.ReadFile(config.Conf.Clash.ConfigPath)
+	yamlFile, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, err
 	}

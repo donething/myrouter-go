@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 	"fmt"
+	"github.com/donething/utils-go/dolog"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"html/template"
@@ -41,15 +42,18 @@ func main() {
 
 	// 使用 gzip 压缩，语句"gzip.Gzip(gzip.DefaultCompression)"不能放在Middleware()中，否则无效
 	router.Use(gzip.Gzip(gzip.DefaultCompression))
+	// 验证权限
 	router.Use(UseAuth)
 
 	// 内嵌静态资源，不必带着静态资源文件夹
 	// 从嵌入的文件系统中获取assets文件夹
-	assets, _ := fs.Sub(embededFiles, "assets")
+	assets, err := fs.Sub(embededFiles, "assets")
+	dolog.CkPanic(err)
 	// 将 assets 文件夹设置为 GIN 的静态文件系统
 	router.StaticFS("/assets", http.FS(assets))
 	// 解析模板文件
-	tmpl, _ := template.ParseFS(embededFiles, "assets/index.html")
+	tmpl, err := template.ParseFS(embededFiles, "assets/index.html")
+	dolog.CkPanic(err)
 	router.SetHTMLTemplate(tmpl)
 	// 定义路由
 	router.GET("/", func(c *gin.Context) {
@@ -62,12 +66,13 @@ func main() {
 	router.GET("/api/router/status", routers.RouterStatus)
 
 	// Clash 辅助工具
+	router.GET("/api/clash/rules/all", clash.GetRules)
 	router.POST("/api/clash/rule/add", clash.AddRule)
 	router.POST("/api/clash/rule/del", clash.DelRule)
-	router.GET("/api/clash/rules/all", clash.GetRules)
 	router.POST("/api/clash/rule/override", clash.OverrideRules)
 	router.POST("/api/clash/rule/backtolast", clash.BackToLastRules)
 	router.GET("/api/clash/config/proxygroups", clash.GetProxyGroups)
+	router.POST("/api/clash/manager/restart", clash.RestartClash)
 	router.GET("/api/clash/data/render", clash.GetClashRenderData)
 
 	// 开始服务

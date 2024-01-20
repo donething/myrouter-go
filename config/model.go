@@ -37,10 +37,8 @@ type Config struct {
 
 	// clash 的辅助功能
 	Clash struct {
-		// 自定义规则文件的路径。为空时默认为"/data/clash/yamls/rules.yaml"
-		RulesPath string `json:"rulesPath"`
-		// config.yaml 配置文件的路径。为空时默认为"/data/clash/config.yaml"
-		ConfigPath string `json:"configPath"`
+		// Clash 所安装的目录。为空时默认为"/data/clash"
+		DirPath string `json:"dirPath"`
 	}
 
 	// 管理员账号

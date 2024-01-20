@@ -54,8 +54,8 @@ func startShell() error {
 func handlePipe(conn net.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
-			logger.Error.Printf("handlePipe 出错: %v\n", err)
-			push.WXPushMsg("handlePipe 出错：%s", fmt.Sprintf("%v", err))
+			logger.Error.Printf("handlePipe 出错: %s\n", err)
+			push.WXPushMsg("handlePipe 出错", fmt.Sprintf("%s", err))
 		}
 	}()
 
@@ -75,7 +75,7 @@ func handlePipe(conn net.Conn) {
 		panic(err)
 	}
 
-	_, err = conn.Write([]byte("Access granted.\n"))
+	_, err = conn.Write([]byte("Access granted.\n可输入执行命令："))
 	if err != nil {
 		panic(err)
 	}
@@ -85,7 +85,13 @@ func handlePipe(conn net.Conn) {
 	rp, wp := io.Pipe()
 	cmd.Stdin = conn
 	cmd.Stdout = wp
-	go io.Copy(conn, rp)
+	go func() {
+		_, err = io.Copy(conn, rp)
+		if err != nil {
+			logger.Error.Printf("读取输出出错：%s\n", err)
+			return
+		}
+	}()
 
 	err = cmd.Run()
 	if err != nil {

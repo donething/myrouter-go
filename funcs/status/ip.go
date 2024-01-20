@@ -117,9 +117,9 @@ func GetLocalIPAddr() (*models.IPAddr, error) {
 		// 是网卡并且不是本地环回网卡
 		if isIpNet && !ipNet.IP.IsLoopback() {
 			ipStr := strings.TrimSpace(ipNet.IP.String())
-			// ipv4
-			if len(strings.Split(ipStr, ".")) == 4 && dohttp.IsPublicIP(net.ParseIP(ipStr)) &&
-				ipAddrs.IPv4 == "" {
+			logger.Info.Printf("当前遍历的 IP 地址'%s'\n", ipStr)
+			// ipv4，只要公网地址
+			if len(strings.Split(ipStr, ".")) == 4 && dohttp.IsPublicIP(net.ParseIP(ipStr)) && ipAddrs.IPv4 == "" {
 				ipAddrs.IPv4 = ipStr
 			}
 			// ipv6

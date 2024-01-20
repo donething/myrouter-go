@@ -51,6 +51,16 @@ func UseAuth(c *gin.Context) {
 	abortAuth(c, fmt.Sprintf("无效的验证信息'%s'", authHeader))
 }
 
+// 拒绝访问
+func abortAuth(c *gin.Context, msg string) {
+	logger.Warn.Printf("'%s' 拒绝访问: %s\n", c.FullPath(), msg)
+
+	c.AbortWithStatusJSON(http.StatusUnauthorized, models.Result{
+		Code: 1000,
+		Msg:  fmt.Sprintf("拒绝访问: %s", msg),
+	})
+}
+
 // UseLoginRouter 登录路由器的中间件
 func UseLoginRouter(c *gin.Context) {
 	// 登录路由器
@@ -66,14 +76,4 @@ func UseLoginRouter(c *gin.Context) {
 	// 登录成功，继续下一步
 	logger.Info.Printf("[%s]已登录路由器，继续下一步\n", c.GetString(myauth.Key))
 	c.Next()
-}
-
-// 拒绝访问
-func abortAuth(c *gin.Context, msg string) {
-	logger.Warn.Printf("'%s' 拒绝访问: %s\n", c.FullPath(), msg)
-
-	c.AbortWithStatusJSON(http.StatusUnauthorized, models.Result{
-		Code: 1000,
-		Msg:  fmt.Sprintf("拒绝访问: %s", msg),
-	})
 }

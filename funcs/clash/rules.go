@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/donething/utils-go/dofile"
 	"io"
-	. "myrouter/config"
 	"os"
 	"strings"
 )
@@ -61,7 +60,7 @@ func addRule(rule string) error {
 // 传递的规则必须与规则文件中的对应的一行完全一致（即使是空格等多余符号）。如"- DOMAIN-SUFFIX,baidu.com,DIRECT"
 func delRule(rule string) error {
 	// 读取原规则文件
-	bs, err := os.ReadFile(Conf.Clash.RulesPath)
+	bs, err := os.ReadFile(rulesPath)
 	if err != nil {
 		return err
 	}
@@ -81,8 +80,7 @@ func delRule(rule string) error {
 // 获取所有的自定义规则（不包括'#'开头的注释）
 func getRules() ([]string, error) {
 	// 使用 OpenFile 打开文件，为了不存在时自动创建
-	file, err := os.OpenFile(Conf.Clash.RulesPath, os.O_RDONLY|os.O_CREATE, 0644)
-	// 还没有自定义规则，即文件不存在时，不作为错误只返回空字符串""
+	file, err := os.OpenFile(rulesPath, os.O_RDONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
 	}
@@ -117,13 +115,13 @@ func getRules() ([]string, error) {
 // 谨慎：会覆盖原有的规则。一定要在原有规则基础上，修改、添加后保存!
 func overrideRules(rules string) error {
 	// 先备份原规则文件
-	err := backupFile(Conf.Clash.RulesPath)
+	err := backupFile(rulesPath)
 	if err != nil {
-		return fmt.Errorf("备份原规则文件'%s'出错：%w", Conf.Clash.RulesPath, err)
+		return fmt.Errorf("备份原规则文件'%s'出错：%w", rulesPath, err)
 	}
 
 	// 写入新规则
-	srcFile, err := os.OpenFile(Conf.Clash.RulesPath, os.O_TRUNC|os.O_RDWR, 0666)
+	srcFile, err := os.OpenFile(rulesPath, os.O_TRUNC|os.O_RDWR, 0666)
 	if err != nil {
 		return err
 	}
@@ -136,8 +134,7 @@ func overrideRules(rules string) error {
 // 恢复自定义规则到上次保存的内容
 func backToLastRules() error {
 	// 判断备份文件是否存在
-	var path = Conf.Clash.RulesPath
-	var bakPath = fmt.Sprintf("%s%s", path, bakTag)
+	var bakPath = fmt.Sprintf("%s%s", rulesPath, bakTag)
 	exists, err := dofile.Exists(bakPath)
 	if err != nil {
 		return err
@@ -146,7 +143,7 @@ func backToLastRules() error {
 	}
 
 	// 恢复
-	err = os.Rename(bakPath, path)
+	err = os.Rename(bakPath, rulesPath)
 	if err != nil {
 		return err
 	}
