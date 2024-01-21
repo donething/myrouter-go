@@ -2,7 +2,7 @@ module myrouter
 
 go 1.20
 
-require github.com/donething/utils-go v0.0.30-0.20240119095842-29ec1bf650e6
+require github.com/donething/utils-go v0.0.30-0.20240120235859-67f28c593c42
 
 require (
 	github.com/bytedance/sonic v1.10.2 // indirect

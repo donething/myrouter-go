@@ -102,7 +102,7 @@ func up() error {
 //
 // @see https://www.cnblogs.com/hirampeng/p/11478995.html
 func GetLocalIPAddr() (*models.IPAddr, error) {
-	var ipAddrs = new(models.IPAddr)
+	var ipAddr = new(models.IPAddr)
 
 	// 获取所有网卡
 	addrs, err := net.InterfaceAddrs()
@@ -112,28 +112,27 @@ func GetLocalIPAddr() (*models.IPAddr, error) {
 
 	// 遍历
 	for _, addr := range addrs {
-		// 取网络地址的网卡的信息
-		ipNet, isIpNet := addr.(*net.IPNet)
 		// 是网卡并且不是本地环回网卡
-		if isIpNet && !ipNet.IP.IsLoopback() {
+		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() {
 			ipStr := strings.TrimSpace(ipNet.IP.String())
 			logger.Info.Printf("当前遍历的 IP 地址'%s'\n", ipStr)
-			// ipv4，只要公网地址
-			if len(strings.Split(ipStr, ".")) == 4 && dohttp.IsPublicIP(net.ParseIP(ipStr)) && ipAddrs.IPv4 == "" {
-				ipAddrs.IPv4 = ipStr
+			// ipv4
+			if ipNet.IP.To4() != nil && ipAddr.IPv4 == "" && dohttp.IsPublicIPv4(ipNet.IP) {
+				// ipv4，只要公网地址
+				ipAddr.IPv4 = ipStr
 			}
 			// ipv6
-			if len(strings.Split(ipStr, ":")) == 8 && ipAddrs.IPv6 == "" {
-				ipAddrs.IPv6 = ipStr
+			if ipNet.IP.To4() == nil && ipNet.IP.To16() != nil && ipAddr.IPv6 == "" {
+				ipAddr.IPv6 = ipStr
 			}
 		}
 	}
 
-	if ipAddrs.IPv4 == "" && ipAddrs.IPv6 == "" {
+	if ipAddr.IPv4 == "" && ipAddr.IPv6 == "" {
 		return nil, fmt.Errorf("获取到的 IPV4、IPV6 地址都为空")
 	}
 
-	return ipAddrs, nil
+	return ipAddr, nil
 }
 
 // GetLocalIPAddrWithCmd 通过 Linux 命令获取地址信息
