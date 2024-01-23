@@ -49,6 +49,6 @@ func init() {
 		Conf.Router.Logo = "RedmiAX6000"
 	}
 	if Conf.Clash.DirPath == "" {
-		Conf.Clash.DirPath = "/data/clash"
+		Conf.Clash.DirPath = "/data/ShellCrash"
 	}
 }

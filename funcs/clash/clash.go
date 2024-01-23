@@ -11,7 +11,7 @@ import (
 var (
 	rulesPath  = filepath.Join(config.Conf.Clash.DirPath, "yamls", "rules.yaml")
 	configPath = filepath.Join(config.Conf.Clash.DirPath, "yamls", "config.yaml")
-	execPath   = filepath.Join(config.Conf.Clash.DirPath, "clash.sh")
+	execPath   = filepath.Join(config.Conf.Clash.DirPath, "menu.sh")
 )
 
 // ExecRestartClash 执行重启 clash
