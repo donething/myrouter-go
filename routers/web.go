@@ -37,14 +37,14 @@ func Reboot(c *gin.Context) {
 	var data models.PostData[bool]
 	err := c.BindJSON(&data)
 	if err != nil {
-		logger.Error.Printf("[%s]解析请求中的数据出错：%s\n", c.GetString(myauth.Key), err)
+		logger.Error.Printf("[%s]解析请求中的数据出错：%s\n", c.GetString(myauth.KeyUser), err)
 		c.JSON(http.StatusOK, models.Result{Code: 1500, Msg: fmt.Sprintf("解析请求中的数据出错：%s", err)})
 		return
 	}
 
 	// 仅在为 true 时恢复到上次的规则
 	if !data.Data {
-		logger.Error.Printf("[%s]根据传递的参数'%t'，不重启路由器\n", c.GetString(myauth.Key), data.Data)
+		logger.Error.Printf("[%s]根据传递的参数'%t'，不重启路由器\n", c.GetString(myauth.KeyUser), data.Data)
 		c.JSON(http.StatusOK, models.Result{Code: 1510,
 			Msg: fmt.Sprintf("根据传递的参数'%v'，不重启路由器：", data.Data)},
 		)
@@ -53,12 +53,12 @@ func Reboot(c *gin.Context) {
 
 	err = MyRouter.Reboot()
 	if err != nil {
-		logger.Error.Printf("[%s]重启路由器出错：%s\n", c.GetString(myauth.Key), err)
+		logger.Error.Printf("[%s]重启路由器出错：%s\n", c.GetString(myauth.KeyUser), err)
 		c.JSON(http.StatusOK, models.Result{Code: 1520, Msg: fmt.Sprintf("重启路由器出错：%s", err)})
 		return
 	}
 
-	logger.Info.Printf("[%s]正在重启路由器…\n", c.GetString(myauth.Key))
+	logger.Info.Printf("[%s]正在重启路由器…\n", c.GetString(myauth.KeyUser))
 	c.JSON(http.StatusOK, models.Result{Code: 0, Msg: "正在重启路由器…"})
 }
 
@@ -69,7 +69,7 @@ func Reboot(c *gin.Context) {
 // JSON 表单数据类型为 PostData[bool]
 func WakeupPC(c *gin.Context) {
 	if Conf.WOL.MACAddr == "" {
-		logger.Warn.Printf("[%s]无法网络唤醒电脑：目标 MAC 地址为空\n", c.GetString(myauth.Key))
+		logger.Warn.Printf("[%s]无法网络唤醒电脑：目标 MAC 地址为空\n", c.GetString(myauth.KeyUser))
 		c.JSON(http.StatusOK, models.Result{Code: 1600, Msg: "无法网络唤醒电脑：目标 MAC 地址为空"})
 		return
 	}
@@ -78,14 +78,14 @@ func WakeupPC(c *gin.Context) {
 	var data models.PostData[bool]
 	err := c.BindJSON(&data)
 	if err != nil {
-		logger.Error.Printf("[%s]解析请求中的数据出错：%s\n", c.GetString(myauth.Key), err)
+		logger.Error.Printf("[%s]解析请求中的数据出错：%s\n", c.GetString(myauth.KeyUser), err)
 		c.JSON(http.StatusOK, models.Result{Code: 1610, Msg: fmt.Sprintf("解析请求中的数据出错：%s", err)})
 		return
 	}
 
 	// 仅在为 true 时恢复到上次的规则
 	if !data.Data {
-		logger.Error.Printf("[%s]根据传递的参数'%t'，不网络唤醒电脑\n", c.GetString(myauth.Key), data.Data)
+		logger.Error.Printf("[%s]根据传递的参数'%t'，不网络唤醒电脑\n", c.GetString(myauth.KeyUser), data.Data)
 		c.JSON(http.StatusOK, models.Result{Code: 1620,
 			Msg: fmt.Sprintf("根据传递的参数'%v'，不网络唤醒电脑：", data.Data)},
 		)
@@ -94,12 +94,12 @@ func WakeupPC(c *gin.Context) {
 
 	err = wol.Wakeup(Conf.WOL.MACAddr)
 	if err != nil {
-		logger.Error.Printf("[%s]网络唤醒电脑出错：%s\n", c.GetString(myauth.Key), err)
+		logger.Error.Printf("[%s]网络唤醒电脑出错：%s\n", c.GetString(myauth.KeyUser), err)
 		c.JSON(http.StatusOK, models.Result{Code: 1630, Msg: fmt.Sprintf("网络唤醒电脑出错：%s", err)})
 		return
 	}
 
-	logger.Info.Printf("[%s]已发送唤醒电脑的网络包\n", c.GetString(myauth.Key))
+	logger.Info.Printf("[%s]已发送唤醒电脑的网络包\n", c.GetString(myauth.KeyUser))
 	c.JSON(http.StatusOK, models.Result{Code: 0, Msg: "已发送唤醒电脑的网络包"})
 }
 
@@ -111,6 +111,6 @@ func WakeupPC(c *gin.Context) {
 func RouterStatus(c *gin.Context) {
 	s := status.GetRouterStatus()
 
-	logger.Info.Printf("[%s]已获取路由器的状态\n", c.GetString(myauth.Key))
+	logger.Info.Printf("[%s]已获取路由器的状态\n", c.GetString(myauth.KeyUser))
 	c.JSON(http.StatusOK, models.Result{Code: 0, Msg: "已获取路由器的状态", Data: s})
 }

@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"myrouter/comm/logger"
 	"myrouter/comm/push"
+	"myrouter/comm/sse"
 	"myrouter/funcs/clash"
 	"myrouter/funcs/shell"
 	"myrouter/routers"
@@ -60,8 +61,11 @@ func main() {
 		c.HTML(http.StatusOK, "index.html", nil)
 	})
 
+	// SSE
+	router.GET("/api/sse/events", sse.UseSSEvents)
+
 	// 路由器功能
-	router.POST("/api//router/wol", routers.WakeupPC)
+	router.POST("/api/router/wol", routers.WakeupPC)
 	router.POST("/api/router/reboot", routers.Reboot)
 	router.GET("/api/router/status", routers.RouterStatus)
 
@@ -72,7 +76,8 @@ func main() {
 	router.POST("/api/clash/rule/override", clash.OverrideRules)
 	router.POST("/api/clash/rule/backtolast", clash.BackToLastRules)
 	router.GET("/api/clash/config/proxygroups", clash.GetProxyGroups)
-	router.POST("/api/clash/manager/restart", clash.RestartClash)
+	router.POST("/api/clash/manager/start", clash.StartClash)
+	router.POST("/api/clash/manager/stop", clash.StopClash)
 	router.GET("/api/clash/data/render", clash.GetClashRenderData)
 
 	// 开始服务
