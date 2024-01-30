@@ -27,7 +27,32 @@ POST `/api/wol`
 
 使用`tcp`连接工具。如在`Linux`下执行`nc 192.168.1.1 23095`连接
 
-# 自启动运行
+# 运行与自启动
+
+## 运行
+
+1. 将生成的可执行文件，命名为`myrouter`，上传到路由器的`/data/myrouter`目录
+2. 执行`chmod +x /data/myrouter/myrouter`
+
+## 自启动
+
+### Openwrt
+
+1. 将`myrouter.sh`上传到路由器的`/etc/init.d`目录
+2. 执行`chmod +x /etc/init.d/myrouter.sh`
+3. 执行`/etc/init.d/myrouter.sh enable`，创建自启动的软连接
+
+管理
+
+```shell
+/etc/init.d/myrouter.sh start
+
+/etc/init.d/myrouter.sh stop
+
+/etc/init.d/myrouter.sh restart
+```
+
+### VN007+
 
 自启动，参考 [007+CPE刷clnc小白教程](https://yaohuo.me/bbs/book_view.aspx?sitei=1000&classid=203&id=1097747&vpage=&lpage=)
 
