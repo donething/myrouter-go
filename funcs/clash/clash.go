@@ -26,6 +26,8 @@ var (
 )
 
 // ExecClash 执行 Clash 命令，并且发送消息给客户端
+//
+// 执行 clash 的很多命令执行成功是没有输出的，有输出说明可能执行出错
 func ExecClash(c *gin.Context, cmd Cmd, title string) {
 	// 转为真实的 Clash 命令
 	var cmdStr string
@@ -52,6 +54,6 @@ func ExecClash(c *gin.Context, cmd Cmd, title string) {
 		return
 	}
 
-	logger.Info.Printf("[%s]已%s\n", c.GetString(myauth.KeyUser), title, result)
+	logger.Info.Printf("[%s]已%s\n", c.GetString(myauth.KeyUser), title)
 	sse.Send(c, sse.Message{Code: 0, Title: fmt.Sprintf("已%s", title)})
 }
